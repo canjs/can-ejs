@@ -1,0 +1,76 @@
+{
+  "name": "can-ejs",
+  "version": "0.0.0",
+  "description": "legacy EJS layer for canjs",
+  "homepage": "https://canjs.com/2.3/docs/can.ejs.html",
+  "author": {
+    "name": "Bitovi",
+    "email": "justin@bitovi.com",
+    "url": "http://bitovi.com"
+  },
+  "scripts": {
+    "preversion": "npm test && npm run build",
+    "version": "git commit -am \"Update dist for release\" && git checkout -b release && git add -f dist/",
+    "postversion": "git push --tags && git checkout master && git branch -D release && git push",
+    "testee": "testee src/test/test.html --browsers firefox",
+    "test": "npm run jshint && npm run testee",
+    "jshint": "jshint src/. --config",
+    "release:patch": "npm version patch && npm publish",
+    "release:minor": "npm version minor && npm publish",
+    "release:major": "npm version major && npm publish",
+    "build": "node build.js",
+    "document": "documentjs",
+    "develop": "can-serve --static --develop --port 8080"
+  },
+  "main": "dist/cjs/can-ejs",
+  "browser": {
+    "transform": [
+      "cssify"
+    ]
+  },
+  "browserify": {
+    "transform": [
+      "cssify"
+    ]
+  },
+  "keywords": [
+    "CanJS",
+    "MVVM"
+  ],
+  "system": {
+    "main": "can-ejs",
+    "directories": {
+      "lib": "src"
+    },
+    "ext": {
+      "ejs": "src/system"
+    },
+    "configDependencies": [
+      "live-reload"
+    ],
+    "npmIgnore": [
+      "documentjs",
+      "testee",
+      "generator-donejs",
+      "donejs-cli",
+      "steal-tools"
+    ],
+    "npmAlgorithm": "flat"
+  },
+  "dependencies": {
+    "can": "canjs/canjs#major",
+    "can-legacy-view-helpers": "^0.1.0",
+    "jquery": "~2.2.1"
+  },
+  "devDependencies": {
+    "documentjs": "^0.4.2",
+    "jshint": "^2.9.1",
+    "cssify": "^0.6.0",
+    "steal": "^0.14.0",
+    "steal-qunit": "^0.1.1",
+    "steal-tools": "^0.14.1",
+    "testee": "^0.2.4",
+    "generator-donejs": "^0.7.0",
+    "donejs-cli": "^0.7.0"
+  }
+}
