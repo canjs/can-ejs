@@ -1,6 +1,6 @@
 {
   "name": "can-ejs",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "legacy EJS layer for canjs",
   "homepage": "https://canjs.com/2.3/docs/can.ejs.html",
   "author": {
