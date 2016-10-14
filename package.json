@@ -12,9 +12,9 @@
     "preversion": "npm test && npm run build",
     "version": "git commit -am \"Update dist for release\" && git checkout -b release && git add -f dist/",
     "postversion": "git push --tags && git checkout master && git branch -D release && git push",
-    "testee": "testee src/test/test.html --browsers firefox",
+    "testee": "testee test/test.html --browsers firefox",
     "test": "npm run jshint && npm run testee",
-    "jshint": "jshint src/. --config",
+    "jshint": "jshint can-ejs.js --config",
     "release:patch": "npm version patch && npm publish",
     "release:minor": "npm version minor && npm publish",
     "release:major": "npm version major && npm publish",
@@ -39,9 +39,6 @@
   ],
   "system": {
     "main": "can-ejs",
-    "directories": {
-      "lib": "src"
-    },
     "ext": {
       "ejs": "src/system"
     },
@@ -58,19 +55,22 @@
     "npmAlgorithm": "flat"
   },
   "dependencies": {
-    "can": "canjs/canjs#major",
-    "can-legacy-view-helpers": "^0.1.0",
-    "jquery": "~2.2.1"
+    "can-compute": "^3.0.0-pre.19",
+    "can-legacy-view-helpers": "^0.5.0",
+    "can-observation": "^3.0.0-pre.15",
+    "can-util": "^3.0.0-pre.70"
   },
   "devDependencies": {
-    "documentjs": "^0.4.2",
-    "jshint": "^2.9.1",
+    "can-list": "^3.0.0-pre.9",
+    "can-map": "^3.0.0-pre.14",
     "cssify": "^0.6.0",
-    "steal": "^0.14.0",
-    "steal-qunit": "^0.1.1",
-    "steal-tools": "^0.14.1",
-    "testee": "^0.2.4",
+    "documentjs": "^0.4.2",
+    "donejs-cli": "^0.7.0",
     "generator-donejs": "^0.7.0",
-    "donejs-cli": "^0.7.0"
+    "jshint": "^2.9.1",
+    "steal": "^0.16.0",
+    "steal-qunit": "^0.1.4",
+    "steal-tools": "^0.16.1",
+    "testee": "^0.2.4"
   }
 }
