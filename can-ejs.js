@@ -1,22 +1,23 @@
 // # can/view/ejs/ejs.js
-// 
+//
 // `can.EJS`: Embedded JavaScript Templates
-// 
-import can from 'can';
-import 'can-legacy-view-helpers';
-import 'can/view/';
-import 'can/util/string/';
-import 'can/compute/';
+//
+var legacyHelpers = require('can-legacy-view-helpers');
+var extend = require("can-util/js/assign/assign");
+var namespace = require("can-util/namespace");
+var each = require("can-util/js/each/each");
+var types = require("can-util/js/types/types");
+var observationReader = require("can-observation/reader/reader");
 
+var templateId = 0;
 // ## Helper methods
-var extend = can.extend,
-	EJS = function (options) {
+var EJS = function (options) {
 		// Supports calling EJS without the constructor.
 		// This returns a function that renders the template.
 		if (!this || this.constructor !== EJS) {
 			var ejs = new EJS(options);
 			return function (data, helpers) {
-				return ejs.render(data, helpers);
+				return legacyHelpers.view.frag( ejs.render(data, helpers) );
 			};
 		}
 		// If we get a `function` directly, it probably is coming from
@@ -27,12 +28,18 @@ var extend = can.extend,
 			};
 			return;
 		}
+		if(typeof options === 'string') {
+			options = {
+				text: options,
+				name: ""+(++templateId)
+			};
+		}
 		// Set options on self.
 		extend(this, options);
 		this.template = this.scanner.scan(this.text, this.name);
 	};
 // Expose EJS via the `can` object.
-can.EJS = EJS;
+namespace.EJS = EJS;
 
 EJS.prototype.
 // ## Render
@@ -45,17 +52,17 @@ extend(EJS.prototype, {
 	// ## Scanner
 	// Singleton scanner instance for parsing templates. See [scanner.js](scanner.html)
 	// for more information.
-	// 
+	//
 	// ### Text
-	// 
+	//
 	// #### Definitions
-	// 
+	//
 	// * `outStart` - Wrapper start text for view function.
-	// 
+	//
 	// * `outEnd` - Wrapper end text for view function.
-	// 
+	//
 	// * `argNames` - Arguments passed into view function.
-	scanner: new can.view.Scanner({
+	scanner: new legacyHelpers.Scanner({
 		text: {
 			outStart: 'with(_VIEW) { with (_CONTEXT) {',
 			outEnd: "}}",
@@ -63,7 +70,7 @@ extend(EJS.prototype, {
 			context: "this"
 		},
 		// ### Tokens
-		// 
+		//
 		// An ordered token registry for the scanner. Scanner makes evaluations
 		// based on which tags are considered opening/closing as well as escaped, etc.
 		tokens: [
@@ -86,7 +93,7 @@ extend(EJS.prototype, {
 					var quickFunc = /\s*\(([\$\w]+)\)\s*->([^\n]*)/,
 						parts = content.match(quickFunc);
 
-					return "can.proxy(function(__){var " + parts[1] + "=can.$(__);" + parts[2] + "}, this);";
+					return "(function(__){var " + parts[1] + "=__;" + parts[2] + "}).bind(this);";
 				}
 			}
 		],
@@ -94,17 +101,17 @@ extend(EJS.prototype, {
 		// Transforms the EJS template to add support for shared blocks.
 		// Essentially, this breaks up EJS tags into multiple EJS tags
 		// if they contained unmatched brackets.
-		// 
+		//
 		// For example, this doesn't work:
-		// 
+		//
 		// `<% if (1) { %><% if (1) { %> hi <% } } %>`
-		// 
+		//
 		// ...without isolated EJS blocks:
-		// 
+		//
 		// `<% if (1) { %><% if (1) { %> hi <% } %><% } %>`
-		// 
+		//
 		// The result of transforming:
-		// 
+		//
 		// `<% if (1) { %><% %><% if (1) { %><% %> hi <% } %><% } %>`
 		transform: function (source) {
 			return source.replace(/<%([\s\S]+?)%>/gm, function (whole, part) {
@@ -154,9 +161,9 @@ extend(EJS.prototype, {
 });
 
 // ## Helpers
-// 
+//
 // In your EJS view you can then call the helper on an element tag:
-// 
+//
 // `<div <%= upperHtml('javascriptmvc') %>></div>`
 EJS.Helpers = function (data, extras) {
 	this._data = data;
@@ -167,7 +174,10 @@ EJS.Helpers = function (data, extras) {
 EJS.Helpers.prototype = {
 	// List allows for live binding a can.List easily within a template.
 	list: function (list, cb) {
-		can.each(list, function (item, i) {
+		if(types.isListLike(list)) {
+			observationReader.get(list, 'length');
+		}
+		each(list, function (item, i) {
 			cb(item, i, list);
 		});
 	},
@@ -175,31 +185,12 @@ EJS.Helpers.prototype = {
 	// and sets up live binding when possible.
 	each: function (list, cb) {
 		// Normal arrays don't get live updated
-		if (can.isArray(list)) {
+		if (Array.isArray(list)) {
 			this.list(list, cb);
 		} else {
-			can.view.lists(list, cb);
+			legacyHelpers.view.lists(list, cb);
 		}
 	}
 };
-// Registers options for a `steal` build.
-can.view.register({
-	suffix: 'ejs',
-	script: function (id, src) {
-		return 'can.EJS(function(_CONTEXT,_VIEW) { ' + new EJS({
-			text: src,
-			name: id
-		})
-			.template.out + ' })';
-	},
-	renderer: function (id, text) {
-		return EJS({
-			text: text,
-			name: id
-		});
-	}
-});
-can.ejs.Helpers = EJS.Helpers;
 
-
-export default can;
+module.exports = EJS;

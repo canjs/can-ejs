@@ -1,7 +1,6 @@
 {
 	"globals": {
 		"steal": true,
-		"can": true,
 		"Zepto": true,
 		"QUnit": true,
 		"System": true,
