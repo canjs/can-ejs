@@ -1,6 +1,6 @@
 {
   "name": "can-ejs",
-  "version": "0.1.0",
+  "version": "3.0.0-pre.0",
   "description": "legacy EJS layer for canjs",
   "homepage": "https://canjs.com/2.3/docs/can.ejs.html",
   "author": {
@@ -15,6 +15,7 @@
     "testee": "testee test/test.html --browsers firefox",
     "test": "npm run jshint && npm run testee",
     "jshint": "jshint can-ejs.js --config",
+	"release:pre": "npm version pre && npm publish",
     "release:patch": "npm version patch && npm publish",
     "release:minor": "npm version minor && npm publish",
     "release:major": "npm version major && npm publish",
