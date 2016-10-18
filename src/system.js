@@ -1,4 +1,4 @@
-import can from "./can-ejs";
+var can = require("./can-ejs");
 
 function translate(load) {
 	return "define(['can-ejs'],function(module){" +
@@ -13,6 +13,6 @@ function translate(load) {
 		"})";
 }
 
-export default {
+module.exports = {
 	translate: translate
 };

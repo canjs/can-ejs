@@ -2,14 +2,16 @@
 // 
 // `can.EJS`: Embedded JavaScript Templates
 // 
-import can from 'can';
-import 'can-legacy-view-helpers';
-import 'can/view/';
-import 'can/util/string/';
-import 'can/compute/';
+var can = require('can-util');
+var legacy = require('can-legacy-view-helpers');
+var view = legacy.view;
+var Scanner = legacy.Scanner;
+// import 'can/view/';
+// import 'can/util/string/';
+// import 'can/compute/';
 
 // ## Helper methods
-var extend = can.extend,
+var extend = can.deepAssign,
 	EJS = function (options) {
 		// Supports calling EJS without the constructor.
 		// This returns a function that renders the template.
@@ -31,8 +33,6 @@ var extend = can.extend,
 		extend(this, options);
 		this.template = this.scanner.scan(this.text, this.name);
 	};
-// Expose EJS via the `can` object.
-can.EJS = EJS;
 
 EJS.prototype.
 // ## Render
@@ -55,7 +55,7 @@ extend(EJS.prototype, {
 	// * `outEnd` - Wrapper end text for view function.
 	// 
 	// * `argNames` - Arguments passed into view function.
-	scanner: new can.view.Scanner({
+	scanner: new Scanner({
 		text: {
 			outStart: 'with(_VIEW) { with (_CONTEXT) {',
 			outEnd: "}}",
@@ -178,12 +178,12 @@ EJS.Helpers.prototype = {
 		if (can.isArray(list)) {
 			this.list(list, cb);
 		} else {
-			can.view.lists(list, cb);
+			view.lists(list, cb);
 		}
 	}
 };
 // Registers options for a `steal` build.
-can.view.register({
+view.register({
 	suffix: 'ejs',
 	script: function (id, src) {
 		return 'can.EJS(function(_CONTEXT,_VIEW) { ' + new EJS({
@@ -199,7 +199,10 @@ can.view.register({
 		});
 	}
 });
+
 can.ejs.Helpers = EJS.Helpers;
 
+// Expose EJS via the `can` object.
+can.EJS = EJS;
 
-export default can;
+module.exports = EJS;

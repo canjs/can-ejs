@@ -1,11 +1,15 @@
-import QUnit from 'steal-qunit';
-import './can-ejs';
-import 'can-legacy-view-helpers/test-helper';
-import 'can/model/';
+var QUnit = require('steal-qunit');
+var can = require('can-util');
+var testHelper = require('./test-helper');
+var legacy = require('can-legacy-view-helpers');
+var view = legacy.view;
+var EJS = require('../src/can-ejs');
+var List = require('can-list');
+// require('can/model/'); // TODO - use can-model
 
 QUnit.module('can-ejs, rendering', {
 	setup: function () {
-		can.view.ext = '.ejs';
+		view.ext = '.ejs';
 
 		this.animals = [
 			'sloth',
@@ -28,7 +32,7 @@ var getAttr = function (el, attrName) {
 	return attrName === 'class' ? el.className : el.getAttribute(attrName);
 };
 test('render with left bracket', function () {
-	var compiled = new can.EJS({
+	var compiled = new EJS({
 		text: this.squareBrackets,
 		type: '['
 	})
@@ -38,7 +42,7 @@ test('render with left bracket', function () {
 	equal(compiled, '<ul><li>sloth</li><li>bear</li><li>monkey</li></ul>', 'renders with bracket');
 });
 test('render with with', function () {
-	var compiled = new can.EJS({
+	var compiled = new EJS({
 		text: this.squareBracketsNoThis,
 		type: '['
 	})
@@ -48,7 +52,7 @@ test('render with with', function () {
 	equal(compiled, '<ul><li>sloth</li><li>bear</li><li>monkey</li></ul>', 'renders bracket with no this');
 });
 test('default carrot', function () {
-	var compiled = new can.EJS({
+	var compiled = new EJS({
 		text: this.angleBracketsNoThis
 	})
 		.render({
@@ -58,7 +62,7 @@ test('default carrot', function () {
 });
 test('render with double angle', function () {
 	var text = '<%% replace_me %>' + '<ul><% animals.each(function(animal){%>' + '<li><%= animal %></li>' + '<%});%></ul>';
-	var compiled = new can.EJS({
+	var compiled = new EJS({
 		text: text
 	})
 		.render({
@@ -68,7 +72,7 @@ test('render with double angle', function () {
 });
 test('comments', function () {
 	var text = '<%# replace_me %>' + '<ul><% animals.each(function(animal){%>' + '<li><%= animal %></li>' + '<%});%></ul>';
-	var compiled = new can.EJS({
+	var compiled = new EJS({
 		text: text
 	})
 		.render({
@@ -78,7 +82,7 @@ test('comments', function () {
 });
 test('multi line', function () {
 	var text = 'a \n b \n c',
-		result = new can.EJS({
+		result = new EJS({
 			text: text
 		})
 			.render({});
@@ -86,7 +90,7 @@ test('multi line', function () {
 });
 test('multi line elements', function () {
 	var text = '<img\n class="<%=myClass%>" />',
-		result = new can.EJS({
+		result = new EJS({
 			text: text
 		})
 			.render({
@@ -94,11 +98,11 @@ test('multi line elements', function () {
 			});
 	ok(result.indexOf('<img\n class="a"') !== -1, 'Multi-line elements render correctly.');
 	// clear hookups b/c we are using .render;
-	can.view.hookups = {};
+	view.hookups = {};
 });
 test('escapedContent', function () {
 	var text = '<span><%= tags %></span><label>&amp;</label><strong><%= number %></strong><input value=\'<%= quotes %>\'/>';
-	var compiled = new can.EJS({
+	var compiled = new EJS({
 		text: text
 	})
 		.render({
@@ -113,11 +117,11 @@ test('escapedContent', function () {
 	equal(div.getElementsByTagName('input')[0].value, 'I use \'quote\' fingers "a lot"');
 	equal(div.getElementsByTagName('label')[0].innerHTML, '&amp;');
 	// clear hookups b/c we are using .render;
-	can.view.hookups = {};
+	view.hookups = {};
 });
 test('unescapedContent', function () {
 	var text = '<span><%== tags %></span><div><%= tags %></div><input value=\'<%== quotes %>\'/>';
-	var compiled = new can.EJS({
+	var compiled = new EJS({
 		text: text
 	})
 		.render({
@@ -131,7 +135,7 @@ test('unescapedContent', function () {
 	equal(div.getElementsByTagName('span')[0].innerHTML.toLowerCase(), '<strong>foo</strong><strong>bar</strong>');
 	equal(div.getElementsByTagName('input')[0].value, 'I use \'quote\' fingers "a lot"', 'escapped no matter what');
 	// clear hookups b/c we are using .render;
-	can.view.hookups = {};
+	view.hookups = {};
 });
 test('returning blocks', function () {
 	var somethingHelper = function (cb) {
@@ -142,7 +146,7 @@ test('returning blocks', function () {
 			4
 		]);
 	};
-	var res = can.view.render(can.test.path('src/test/test_template.ejs'), {
+	var res = view.render(testHelper.path('src/test/test_template.ejs'), {
 		something: somethingHelper,
 		items: [
 			'a',
@@ -156,60 +160,60 @@ test('returning blocks', function () {
 });
 test('easy hookup', function () {
 	var div = document.createElement('div');
-	div.appendChild(can.view(can.test.path('src/test/easyhookup.ejs'), {
+	div.appendChild(view(testHelper.path('src/test/easyhookup.ejs'), {
 		text: 'yes'
 	}));
 	ok(div.getElementsByTagName('div')[0].className.indexOf('yes') !== -1, 'has yes');
 });
 test('multiple function hookups in a tag', function () {
 	var text = '<span <%= (el)-> can.data(can.$(el),\'foo\',\'bar\') %>' + ' <%= (el)-> can.data(can.$(el),\'baz\',\'qux\') %>>lorem ipsum</span>',
-		compiled = new can.EJS({
+		compiled = new EJS({
 			text: text
 		})
 			.render(),
 		div = document.createElement('div');
-	div.appendChild(can.view.frag(compiled));
+	div.appendChild(view.frag(compiled));
 	var span = div.getElementsByTagName('span')[0];
 	equal(can.data(can.$(span), 'foo'), 'bar', 'first hookup');
 	equal(can.data(can.$(span), 'baz'), 'qux', 'second hookup');
 });
 test('helpers', function () {
-	can.EJS.Helpers.prototype.simpleHelper = function () {
+	EJS.Helpers.prototype.simpleHelper = function () {
 		return 'Simple';
 	};
-	can.EJS.Helpers.prototype.elementHelper = function () {
+	EJS.Helpers.prototype.elementHelper = function () {
 		return function (el) {
 			el.innerHTML = 'Simple';
 		};
 	};
 	var text = '<div><%= simpleHelper() %></div>';
-	var compiled = new can.EJS({
+	var compiled = new EJS({
 		text: text
 	})
 		.render();
 	equal(compiled, '<div>Simple</div>');
 	text = '<div id="hookup" <%= elementHelper() %>></div>';
-	compiled = new can.EJS({
+	compiled = new EJS({
 		text: text
 	})
 		.render();
-	can.append(can.$('#qunit-fixture'), can.view.frag(compiled));
+	can.append(can.$('#qunit-fixture'), view.frag(compiled));
 	equal(can.$('#hookup')[0].innerHTML, 'Simple');
 });
 test('list helper', function () {
 	var text = '<% list(todos, function(todo){ %><div><%= todo.name %></div><% }) %>';
-	var todos = new can.List([{
+	var todos = new List([{
 		id: 1,
 		name: 'Dishes'
 	}]),
-		compiled = new can.EJS({
+		compiled = new EJS({
 			text: text
 		})
 			.render({
 				todos: todos
 			}),
 		div = document.createElement('div');
-	div.appendChild(can.view.frag(compiled));
+	div.appendChild(view.frag(compiled));
 	equal(div.getElementsByTagName('div')
 		.length, 1, '1 item in list');
 	todos.push({
@@ -233,14 +237,14 @@ test('attribute single unescaped, html single unescaped', function () {
 	var task = new can.Map({
 		name: 'dishes'
 	});
-	var compiled = new can.EJS({
+	var compiled = new EJS({
 		text: text
 	})
 		.render({
 			task: task
 		});
 	var div = document.createElement('div');
-	div.appendChild(can.view.frag(compiled));
+	div.appendChild(view.frag(compiled));
 	equal(div.getElementsByTagName('div')[0].innerHTML, 'dishes', 'html correctly dishes');
 	equal(div.getElementsByTagName('div')[0].className, '', 'class empty');
 	task.attr('name', 'lawn');
@@ -266,18 +270,18 @@ test('event binding / triggering on things other than options', 1, function () {
 });
 test('select live binding', function () {
 	var text = '<select><% todos.each(function(todo){ %><option><%= todo.name %></option><% }) %></select>',
-		Todos = new can.List([{
+		Todos = new List([{
 			id: 1,
 			name: 'Dishes'
 		}]),
-		compiled = new can.EJS({
+		compiled = new EJS({
 			text: text
 		})
 			.render({
 				todos: Todos
 			}),
 		div = document.createElement('div');
-	div.appendChild(can.view.frag(compiled));
+	div.appendChild(view.frag(compiled));
 	equal(div.getElementsByTagName('option')
 		.length, 1, '1 item in list');
 	Todos.push({
@@ -295,14 +299,14 @@ test('block live binding', function () {
 	var obs = new can.Map({
 		sex: 'male'
 	});
-	var compiled = new can.EJS({
+	var compiled = new EJS({
 		text: text
 	})
 		.render({
 			obs: obs
 		});
 	var div = document.createElement('div');
-	div.appendChild(can.view.frag(compiled));
+	div.appendChild(view.frag(compiled));
 	// We have to test using nodeName and innerHTML (and not outerHTML) because IE 8 and under treats
 	// user-defined properties on nodes as attributes.
 	equal(div.getElementsByTagName('div')[0].firstChild.nodeName.toUpperCase(), 'SPAN', 'initial span tag');
@@ -316,14 +320,14 @@ test('hookups in tables', function () {
 	var obs = new can.Map({
 		sex: 'male'
 	});
-	var compiled = new can.EJS({
+	var compiled = new EJS({
 		text: text
 	})
 		.render({
 			obs: obs
 		});
 	var div = document.createElement('div');
-	div.appendChild(can.view.frag(compiled));
+	div.appendChild(view.frag(compiled));
 	// We have to test using nodeName and innerHTML (and not outerHTML) because IE 8 and under treats
 	// user-defined properties on nodes as attributes.
 	equal(div.getElementsByTagName('tbody')[0].firstChild.firstChild.nodeName, 'TD', 'initial tag');
@@ -335,19 +339,19 @@ test('hookups in tables', function () {
 //Issue 233
 test('multiple tbodies in table hookup', function () {
 	var text = '<table>' + '<% can.each(people, function(person){ %>' + '<tbody><tr><td><%= person.name %></td></tr></tbody>' + '<% }) %>' + '</table>',
-		people = new can.List([{
+		people = new List([{
 			name: 'Steve'
 		}, {
 			name: 'Doug'
 		}]),
-		compiled = new can.EJS({
+		compiled = new EJS({
 			text: text
 		})
 			.render({
 				people: people
 			}),
 		div = document.createElement('div');
-	div.appendChild(can.view.frag(compiled));
+	div.appendChild(view.frag(compiled));
 	equal(div.getElementsByTagName('tbody')
 		.length, 2, 'two tbodies');
 });
@@ -358,14 +362,14 @@ test('multiple hookups in a single attribute', function () {
 			bar: '2',
 			baz: '3'
 		}),
-		compiled = new can.EJS({
+		compiled = new EJS({
 			text: text
 		})
 			.render({
 				obs: obs
 			});
 	var div = document.createElement('div');
-	div.appendChild(can.view.frag(compiled));
+	div.appendChild(view.frag(compiled));
 	var innerDiv = div.childNodes[0];
 	equal(getAttr(innerDiv, 'class'), '1a2b3', 'initial render');
 	obs.attr('bar', '4');
@@ -380,14 +384,14 @@ test('adding and removing multiple html content within a single element', functi
 			b: 'b',
 			c: 'c'
 		}),
-		compiled = new can.EJS({
+		compiled = new EJS({
 			text: text
 		})
 			.render({
 				obs: obs
 			});
 	var div = document.createElement('div');
-	div.appendChild(can.view.frag(compiled));
+	div.appendChild(view.frag(compiled));
 	equal(div.firstChild.nodeName.toUpperCase(), 'DIV', 'initial render node name');
 	equal(div.firstChild.innerHTML, 'abc', 'initial render text');
 	obs.attr({
@@ -413,14 +417,14 @@ test('live binding and removeAttr', function () {
 			attributes: 'some="myText"',
 			message: 'Live long and prosper'
 		}),
-		compiled = new can.EJS({
+		compiled = new EJS({
 			text: text
 		})
 			.render({
 				obs: obs
 			}),
 		div = document.createElement('div');
-	div.appendChild(can.view.frag(compiled));
+	div.appendChild(view.frag(compiled));
 	
 	var p = div.getElementsByTagName('p')[0],
 		span = p.getElementsByTagName('span')[0];
@@ -457,14 +461,14 @@ test('hookup within a tag', function () {
 			foo: 'class="a"',
 			baz: 'some=\'property\''
 		}),
-		compiled = new can.EJS({
+		compiled = new EJS({
 			text: text
 		})
 			.render({
 				obs: obs
 			});
 	var div = document.createElement('div');
-	div.appendChild(can.view.frag(compiled));
+	div.appendChild(view.frag(compiled));
 	var anchor = div.getElementsByTagName('div')[0];
 	equal(getAttr(anchor, 'class'), 'a');
 	equal(anchor.getAttribute('some'), 'property');
@@ -484,14 +488,14 @@ test('single escaped tag, removeAttr', function () {
 		obs = new can.Map({
 			foo: 'data-bar="john doe\'s bar"'
 		}),
-		compiled = new can.EJS({
+		compiled = new EJS({
 			text: text
 		})
 			.render({
 				obs: obs
 			});
 	var div = document.createElement('div');
-	div.appendChild(can.view.frag(compiled));
+	div.appendChild(view.frag(compiled));
 	var anchor = div.getElementsByTagName('div')[0];
 	equal(anchor.getAttribute('data-bar'), 'john doe\'s bar');
 	obs.removeAttr('foo');
@@ -504,14 +508,14 @@ test('html comments', function () {
 		obs = new can.Map({
 			foo: 'foo'
 		}),
-		compiled = new can.EJS({
+		compiled = new EJS({
 			text: text
 		})
 			.render({
 				obs: obs
 			});
 	var div = document.createElement('div');
-	div.appendChild(can.view.frag(compiled));
+	div.appendChild(view.frag(compiled));
 	equal(div.getElementsByTagName('div')[0].innerHTML, 'foo', 'Element as expected');
 });
 test('hookup and live binding', function () {
@@ -521,14 +525,14 @@ test('hookup and live binding', function () {
 			className: 'someTask',
 			name: 'My Name'
 		}),
-		compiled = new can.EJS({
+		compiled = new EJS({
 			text: text
 		})
 			.render({
 				task: task
 			}),
 		div = document.createElement('div');
-	div.appendChild(can.view.frag(compiled));
+	div.appendChild(view.frag(compiled));
 	var child = div.getElementsByTagName('div')[0];
 	ok(child.className.indexOf('complete') === -1, 'is incomplete');
 	ok( !! can.data(can.$(child), 'task'), 'has data');
@@ -552,10 +556,10 @@ test('hookup and live binding', function () {
  items: []
  }),
 
- compiled = new can.EJS({ text: text }).render({ obs: obs });
+ compiled = new EJS({ text: text }).render({ obs: obs });
 
  var ul = document.createElement('ul');
- ul.appendChild(can.view.frag(compiled));
+ ul.appendChild(view.frag(compiled));
 
  equal(ul.innerHTML, '<li>No items</li>', 'initial observable state');
 
@@ -564,7 +568,7 @@ test('hookup and live binding', function () {
  });
  */
 test('unescape bindings change', function () {
-	var l = new can.List([{
+	var l = new List([{
 		complete: true
 	}, {
 		complete: false
@@ -582,14 +586,14 @@ test('unescape bindings change', function () {
 		return num;
 	};
 	var text = '<div><%== completed() %></div>',
-		compiled = new can.EJS({
+		compiled = new EJS({
 			text: text
 		})
 			.render({
 				completed: completed
 			});
 	var div = document.createElement('div');
-	div.appendChild(can.view.frag(compiled));
+	div.appendChild(view.frag(compiled));
 	var child = div.getElementsByTagName('div')[0];
 	equal(child.innerHTML, '2', 'at first there are 2 true bindings');
 	var item = new can.Map({
@@ -605,7 +609,7 @@ test('unescape bindings change', function () {
 	equal(child.innerHTML, '2', 'there are still 2 complete');
 });
 test('escape bindings change', function () {
-	var l = new can.List([{
+	var l = new List([{
 		complete: true
 	}, {
 		complete: false
@@ -623,14 +627,14 @@ test('escape bindings change', function () {
 		return num;
 	};
 	var text = '<div><%= completed() %></div>',
-		compiled = new can.EJS({
+		compiled = new EJS({
 			text: text
 		})
 			.render({
 				completed: completed
 			});
 	var div = document.createElement('div');
-	div.appendChild(can.view.frag(compiled));
+	div.appendChild(view.frag(compiled));
 	var child = div.getElementsByTagName('div')[0];
 	equal(child.innerHTML, '2', 'at first there are 2 true bindings');
 	var item = new can.Map({
@@ -642,7 +646,7 @@ test('escape bindings change', function () {
 	equal(child.innerHTML, '2', 'now there are 2 complete');
 });
 test('tag bindings change', function () {
-	var l = new can.List([{
+	var l = new List([{
 		complete: true
 	}, {
 		complete: false
@@ -660,14 +664,14 @@ test('tag bindings change', function () {
 		return 'items=\'' + num + '\'';
 	};
 	var text = '<div <%= completed() %>></div>',
-		compiled = new can.EJS({
+		compiled = new EJS({
 			text: text
 		})
 			.render({
 				completed: completed
 			});
 	var div = document.createElement('div');
-	div.appendChild(can.view.frag(compiled));
+	div.appendChild(view.frag(compiled));
 	var child = div.getElementsByTagName('div')[0];
 	equal(child.getAttribute('items'), '2', 'at first there are 2 true bindings');
 	var item = new can.Map({
@@ -679,7 +683,7 @@ test('tag bindings change', function () {
 	equal(child.getAttribute('items'), '2', 'now there are 2 complete');
 });
 test('attribute value bindings change', function () {
-	var l = new can.List([{
+	var l = new List([{
 		complete: true
 	}, {
 		complete: false
@@ -697,14 +701,14 @@ test('attribute value bindings change', function () {
 		return num;
 	};
 	var text = '<div items="<%= completed() %>"></div>',
-		compiled = new can.EJS({
+		compiled = new EJS({
 			text: text
 		})
 			.render({
 				completed: completed
 			});
 	var div = document.createElement('div');
-	div.appendChild(can.view.frag(compiled));
+	div.appendChild(view.frag(compiled));
 	var child = div.getElementsByTagName('div')[0];
 	equal(child.getAttribute('items'), '2', 'at first there are 2 true bindings');
 	var item = new can.Map({
@@ -720,14 +724,14 @@ test('in tag toggling', function () {
 	var obs = new can.Map({
 		val: 'foo="bar"'
 	});
-	var compiled = new can.EJS({
+	var compiled = new EJS({
 		text: text
 	})
 		.render({
 			obs: obs
 		});
 	var div = document.createElement('div');
-	div.appendChild(can.view.frag(compiled));
+	div.appendChild(view.frag(compiled));
 	obs.attr('val', 'bar=\'foo\'');
 	obs.attr('val', 'foo="bar"');
 	var d2 = div.getElementsByTagName('div')[0];
@@ -743,14 +747,14 @@ test('parent is right with bock', function () {
 				name: 'Justin'
 			}]
 		}),
-		compiled = new can.EJS({
+		compiled = new EJS({
 			text: text
 		})
 			.render({
 				obs: obs
 			});
 	var div = document.createElement('div');
-	div.appendChild(can.view.frag(compiled));
+	div.appendChild(view.frag(compiled));
 	var ul = div.getElementsByTagName('ul')[0];
 	var li = div.getElementsByTagName('li')[0];
 	ok(ul, 'we have a ul');
@@ -761,14 +765,14 @@ test('property name only attributes', function () {
 	var obs = new can.Map({
 		val: true
 	});
-	var compiled = new can.EJS({
+	var compiled = new EJS({
 		text: text
 	})
 		.render({
 			obs: obs
 		});
 	var div = document.getElementById('qunit-fixture');
-	div.appendChild(can.view.frag(compiled));
+	div.appendChild(view.frag(compiled));
 	var input = div.getElementsByTagName('input')[0];
 	can.trigger(input, 'click');
 	obs.attr('val', false);
@@ -784,14 +788,14 @@ test('nested properties', function () {
 			first: 'Justin'
 		}
 	});
-	var compiled = new can.EJS({
+	var compiled = new EJS({
 		text: text
 	})
 		.render({
 			obs: obs
 		});
 	var div = document.createElement('div');
-	div.appendChild(can.view.frag(compiled));
+	div.appendChild(view.frag(compiled));
 	div = div.getElementsByTagName('div')[0];
 	equal(div.innerHTML, 'Justin');
 	obs.attr('name.first', 'Brian');
@@ -802,14 +806,14 @@ test('tags without chidren or ending with /> do not change the state', function 
 	var obs = new can.Map({
 		content: '<td>Justin</td>'
 	});
-	var compiled = new can.EJS({
+	var compiled = new EJS({
 		text: text
 	})
 		.render({
 			obs: obs
 		});
 	var div = document.createElement('div');
-	var html = can.view.frag(compiled);
+	var html = view.frag(compiled);
 	div.appendChild(html);
 	equal(div.getElementsByTagName('span')
 		.length, 0, 'there are no spans');
@@ -818,13 +822,13 @@ test('tags without chidren or ending with /> do not change the state', function 
 });
 test('nested live bindings', function () {
 	expect(0);
-	var items = new can.List([{
+	var items = new List([{
 		title: 0,
 		is_done: false,
 		id: 0
 	}]);
 	var div = document.createElement('div');
-	div.appendChild(can.view(can.test.path('src/test/nested_live_bindings.ejs'), {
+	div.appendChild(view(testHelper.path('src/test/nested_live_bindings.ejs'), {
 		items: items
 	}));
 	items.push({
@@ -845,13 +849,13 @@ test('nested live bindings', function () {
 
  })*/
 test('trailing text', function () {
-	can.view.ejs('count', 'There are <%= this.attr(\'length\') %> todos');
+	view.ejs('count', 'There are <%= this.attr(\'length\') %> todos');
 	var div = document.createElement('div');
-	div.appendChild(can.view('count', new can.List([{}, {}])));
+	div.appendChild(view('count', new List([{}, {}])));
 	ok(/There are 2 todos/.test(div.innerHTML), 'got all text');
 });
 test('recursive views', function () {
-	var data = new can.List([{
+	var data = new List([{
 		label: 'branch1',
 		children: [{
 			id: 2,
@@ -859,13 +863,13 @@ test('recursive views', function () {
 		}]
 	}]);
 	var div = document.createElement('div');
-	div.appendChild(can.view(can.test.path('src/test/recursive.ejs'), {
+	div.appendChild(view(testHelper.path('src/test/recursive.ejs'), {
 		items: data
 	}));
 	ok(/class="leaf"|class=leaf/.test(div.innerHTML), 'we have a leaf');
 });
 test('indirectly recursive views', function () {
-	var unordered = new can.List([{
+	var unordered = new List([{
 		ol: [{
 			ul: [{
 				ol: [
@@ -876,17 +880,17 @@ test('indirectly recursive views', function () {
 			}]
 		}]
 	}]);
-	can.view.cache = false;
+	view.cache = false;
 	var div = document.createElement('div');
-	div.appendChild(can.view(can.test.path('src/test/indirect1.ejs'), {
+	div.appendChild(view(testHelper.path('src/test/indirect1.ejs'), {
 		unordered: unordered
 	}));
 	document.getElementById('qunit-fixture')
 		.appendChild(div);
 	var el = can.$('#qunit-fixture ul > li > ol > li > ul > li > ol > li')[0];
 	ok( !! el && can.trim(el.innerHTML) === '1', 'Uncached indirectly recursive EJS working.');
-	can.view.cache = true;
-	div.appendChild(can.view(can.test.path('src/test/indirect1.ejs'), {
+	view.cache = true;
+	div.appendChild(view(testHelper.path('src/test/indirect1.ejs'), {
 		unordered: unordered
 	}));
 	el = can.$('#qunit-fixture ul + ul > li > ol > li > ul > li > ol > li')[0];
@@ -896,11 +900,11 @@ test('indirectly recursive views', function () {
 });
 test('recursive views of previously stolen files shouldn\'t fail', function () {
 	// Using preload to bypass steal dependency (necessary for "grunt test")
-	can.view.preloadStringRenderer('view_ejs_test_indirect1_ejs', can.EJS({
-		text: '<ul>' + '<% unordered.each(function(item) { %>' + '<li>' + '<% if(item.ol) { %>' + '<%== can.view.render(can.test.path(\'src/test/indirect2.ejs\'), { ordered: item.ol }) %>' + '<% } else { %>' + '<%= item.toString() %>' + '<% } %>' + '</li>' + '<% }) %>' + '</ul>'
+	view.preloadStringRenderer('view_ejs_test_indirect1_ejs', EJS({
+		text: '<ul>' + '<% unordered.each(function(item) { %>' + '<li>' + '<% if(item.ol) { %>' + '<%== view.render(testHelper.path(\'src/test/indirect2.ejs\'), { ordered: item.ol }) %>' + '<% } else { %>' + '<%= item.toString() %>' + '<% } %>' + '</li>' + '<% }) %>' + '</ul>'
 	}));
-	can.view.preloadStringRenderer('view_ejs_test_indirect2_ejs', can.EJS({
-		text: '<ol>' + '<% ordered.each(function(item) { %>' + '<li>' + '<% if(item.ul) { %>' + '<%== can.view.render(can.test.path(\'src/test/indirect1.ejs\'), { unordered: item.ul }) %>' + '<% } else { %>' + '<%= item.toString() %>' + '<% } %>' + '</li>' + '<% }) %>' + '</ol>'
+	view.preloadStringRenderer('view_ejs_test_indirect2_ejs', EJS({
+		text: '<ol>' + '<% ordered.each(function(item) { %>' + '<li>' + '<% if(item.ul) { %>' + '<%== view.render(testHelper.path(\'src/test/indirect1.ejs\'), { unordered: item.ul }) %>' + '<% } else { %>' + '<%= item.toString() %>' + '<% } %>' + '</li>' + '<% }) %>' + '</ol>'
 	}));
 	var unordered = new can.Map.List([{
 		ol: [{
@@ -913,17 +917,17 @@ test('recursive views of previously stolen files shouldn\'t fail', function () {
 			}]
 		}]
 	}]);
-	can.view.cache = false;
+	view.cache = false;
 	var div = document.createElement('div');
-	div.appendChild(can.view(can.test.path('src/test/indirect1.ejs'), {
+	div.appendChild(view(testHelper.path('src/test/indirect1.ejs'), {
 		unordered: unordered
 	}));
 	document.getElementById('qunit-fixture')
 		.appendChild(div);
 	var el = can.$('#qunit-fixture ul > li > ol > li > ul > li > ol > li')[0];
 	ok( !! el && can.trim(el.innerHTML) === '1', 'Uncached indirectly recursive EJS working.');
-	can.view.cache = true;
-	div.appendChild(can.view(can.test.path('src/test/indirect1.ejs'), {
+	view.cache = true;
+	div.appendChild(view(testHelper.path('src/test/indirect1.ejs'), {
 		unordered: unordered
 	}));
 	el = can.$('#qunit-fixture ul + ul > li > ol > li > ul > li > ol > li')[0];
@@ -933,7 +937,7 @@ test('recursive views of previously stolen files shouldn\'t fail', function () {
 });
 test('live binding select', function () {
 	var text = '<select><% items.each(function(ob) { %>' + '<option value=\'<%= ob.attr(\'id\') %>\'><%= ob.attr(\'title\') %></option>' + '<% }); %></select>',
-		items = new can.List([{
+		items = new List([{
 			title: 'Make bugs',
 			is_done: true,
 			id: 0
@@ -946,14 +950,14 @@ test('live binding select', function () {
 			is_done: false,
 			id: 2
 		}]),
-		compiled = new can.EJS({
+		compiled = new EJS({
 			text: text
 		})
 			.render({
 				items: items
 			}),
 		div = document.createElement('div');
-	div.appendChild(can.view.frag(compiled));
+	div.appendChild(view.frag(compiled));
 	equal(div.getElementsByTagName('option')
 		.length, 3, '3 items in list');
 	var option = div.getElementsByTagName('option')[0];
@@ -967,12 +971,12 @@ test('live binding select', function () {
 		.length, 4, '4 items in list');
 });
 test('live binding textarea', function () {
-	can.view.ejs('textarea-test', '<textarea>Before<%= obs.attr(\'middle\') %>After</textarea>');
+	view.ejs('textarea-test', '<textarea>Before<%= obs.attr(\'middle\') %>After</textarea>');
 	var obs = new can.Map({
 		middle: 'yes'
 	}),
 		div = document.createElement('div');
-	var node = can.view('textarea-test', {
+	var node = view('textarea-test', {
 		obs: obs
 	});
 	div.appendChild(node);
@@ -986,7 +990,7 @@ test('reset on a live bound input', function () {
 		person = new can.Map({
 			name: 'Bob'
 		}),
-		compiled = new can.EJS({
+		compiled = new EJS({
 			text: text
 		})
 			.render({
@@ -994,21 +998,21 @@ test('reset on a live bound input', function () {
 			}),
 		form = document.createElement('form'),
 		input;
-	form.appendChild(can.view.frag(compiled));
+	form.appendChild(view.frag(compiled));
 	input = form.getElementsByTagName('input')[0];
 	form.reset();
 	equal(input.value, 'Bob', 'value is correct');
 });
 test('A non-escaping live magic tag within a control structure and no leaks', function () {
-	var nodeLists = can.view.nodeLists;
+	var nodeLists = view.nodeLists;
 	for (var prop in nodeLists.nodeMap) {
 		delete nodeLists.nodeMap[prop];
 	}
 	var text = '<div><% items.each(function(ob) { %>' + '<%== ob.attr(\'html\') %>' + '<% }); %></div>',
-		items = new can.List([{
+		items = new List([{
 			html: '<label>Hello World</label>'
 		}]),
-		compiled = new can.EJS({
+		compiled = new EJS({
 			text: text
 		})
 			.render({
@@ -1016,7 +1020,7 @@ test('A non-escaping live magic tag within a control structure and no leaks', fu
 			}),
 		div = can.$('#qunit-fixture')[0];
 	div.innerHTML = '';
-	can.append(can.$('#qunit-fixture'), can.view.frag(compiled));
+	can.append(can.$('#qunit-fixture'), view.frag(compiled));
 	ok(div.getElementsByTagName('label')[0], 'label exists');
 	items[0].attr('html', '<p>hi</p>');
 	equal(div.getElementsByTagName('label')
@@ -1037,25 +1041,25 @@ test('attribute unquoting', function () {
 			id: 1,
 			single: true
 		}),
-		compiled = new can.EJS({
+		compiled = new EJS({
 			text: text
 		})
 			.render({
 				facet: facet
 			}),
 		div = document.createElement('div');
-	div.appendChild(can.view.frag(compiled));
+	div.appendChild(view.frag(compiled));
 	equal(div.children[0].name, 'facet-1');
 	equal(div.children[0].value, 'facet-1');
 });
 test('empty element hooks work correctly', function () {
 	var text = '<div <%= function(e){ e.innerHTML = "1 Will show"; } %>></div>' + '<div <%= function(e){ e.innerHTML = "2 Will not show"; } %>></div>' + '3 Will not show';
-	var compiled = new can.EJS({
+	var compiled = new EJS({
 		text: text
 	})
 		.render(),
 		div = document.createElement('div');
-	div.appendChild(can.view.frag(compiled));
+	div.appendChild(view.frag(compiled));
 	equal(div.childNodes.length, 3, 'all three elements present');
 });
 test('live binding with parent dependent tags but without parent tag present in template', function () {
@@ -1073,14 +1077,14 @@ test('live binding with parent dependent tags but without parent tag present in 
 		first: 'Austin',
 		last: 'McDaniel'
 	});
-	var compiled = new can.EJS({
+	var compiled = new EJS({
 		text: text.join('\n')
 	})
 		.render({
 			person: person
 		});
 	var table = document.createElement('table');
-	table.appendChild(can.view.frag(compiled));
+	table.appendChild(view.frag(compiled));
 	equal(table.getElementsByTagName('tr')[0].firstChild.nodeName.toUpperCase(), 'TD');
 	equal(table.getElementsByTagName('tr')[0].firstChild.innerHTML, 'Austin');
 	equal(table.getElementsByTagName('tr')[1].firstChild.nodeName.toUpperCase(), 'TD');
@@ -1097,14 +1101,14 @@ test('live binding with parent dependent tags but without parent tag present in 
 });
 test('spaces between attribute name and value', function () {
 	var text = '<input type="text" value = "<%= test %>" />',
-		compiled = new can.EJS({
+		compiled = new EJS({
 			text: text
 		})
 			.render({
 				test: 'testing'
 			}),
 		div = document.createElement('div');
-	div.appendChild(can.view.frag(compiled));
+	div.appendChild(view.frag(compiled));
 	var input = div.getElementsByTagName('input')[0];
 	equal(input.value, 'testing');
 	equal(input.type, 'text');
@@ -1112,14 +1116,14 @@ test('spaces between attribute name and value', function () {
 test('live binding with computes', function () {
 	var text = '<span><%= compute() %></span>',
 		compute = can.compute(5),
-		compiled = new can.EJS({
+		compiled = new EJS({
 			text: text
 		})
 			.render({
 				compute: compute
 			}),
 		div = document.createElement('div');
-	div.appendChild(can.view.frag(compiled));
+	div.appendChild(view.frag(compiled));
 	var span = div.getElementsByTagName('span');
 	equal(span.length, 1);
 	span = span[0];
@@ -1132,7 +1136,7 @@ test('live binding with computes', function () {
 	equal(span.innerHTML, 'true');
 });
 test('testing for clean tables', function () {
-	var games = new can.List();
+	var games = new List();
 	games.push({
 		name: 'The Legend of Zelda',
 		rating: 10
@@ -1149,38 +1153,38 @@ test('testing for clean tables', function () {
 		name: 'A Dude Named Daffl',
 		rating: 8.5
 	});
-	var res = can.view.render(can.test.path('src/test/table_test.ejs'), {
+	var res = view.render(testHelper.path('src/test/table_test.ejs'), {
 		games: games
 	}),
 		div = document.createElement('div');
-	div.appendChild(can.view.frag(res));
+	div.appendChild(view.frag(res));
 	ok(!/@@!!@@/.test(div.innerHTML), 'no placeholders');
 });
 test('inserting live-binding partials assume the correct parent tag', function () {
-	can.view.ejs('rowView', '<% can.each(columns, function(col) { %>' + '<th><%= col.attr("name") %></th>' + '<% }) %>');
-	can.view.ejs('tableView', '<table><tbody><tr>' + '<%== can.view.render("rowView", this) %>' + '</tr></tbody></table>');
+	view.ejs('rowView', '<% can.each(columns, function(col) { %>' + '<th><%= col.attr("name") %></th>' + '<% }) %>');
+	view.ejs('tableView', '<table><tbody><tr>' + '<%== view.render("rowView", this) %>' + '</tr></tbody></table>');
 	var data = {
-		columns: new can.List([{
+		columns: new List([{
 			name: 'Test 1'
 		}, {
 			name: 'Test 2'
 		}])
 	};
 	var div = document.createElement('div');
-	var dom = can.view('tableView', data);
+	var dom = view('tableView', data);
 	div.appendChild(dom);
 	var ths = div.getElementsByTagName('th');
 	equal(ths.length, 2, 'Got two table headings');
 	equal(ths[0].innerHTML, 'Test 1', 'First column heading correct');
 	equal(ths[1].innerHTML, 'Test 2', 'Second column heading correct');
-	equal(can.view.render('tableView', data)
+	equal(view.render('tableView', data)
 		.indexOf('<table><tbody><tr><td data-view-id='), 0, 'Rendered output starts' + 'as expected');
 	// clear hookups b/c we are using .render;
-	can.view.hookups = {};
+	view.hookups = {};
 });
 // http://forum.javascriptmvc.com/topic/live-binding-on-mustache-template-does-not-seem-to-be-working-with-nested-properties
 test('Observe with array attributes', function () {
-	can.view.ejs('observe-array', '<ul><% can.each(todos, function(todo, i) { %><li><%= todos.attr(""+i) %></li><% }) %></ul><div><%= this.attr("message") %></div>');
+	view.ejs('observe-array', '<ul><% can.each(todos, function(todo, i) { %><li><%= todos.attr(""+i) %></li><% }) %></ul><div><%= this.attr("message") %></div>');
 	var div = document.createElement('div');
 	var data = new can.Map({
 		todos: [
@@ -1191,7 +1195,7 @@ test('Observe with array attributes', function () {
 		message: 'Hello',
 		count: 2
 	});
-	div.appendChild(can.view('observe-array', data));
+	div.appendChild(view('observe-array', data));
 	equal(div.getElementsByTagName('li')[1].innerHTML, 'Line #2', 'Check initial array');
 	equal(div.getElementsByTagName('div')[0].innerHTML, 'Hello', 'Check initial message');
 	data.attr('todos.1', 'Line #2 changed');
@@ -1204,30 +1208,30 @@ test('hookup this correctly', function () {
 		from: 'cows'
 	};
 	var html = '<span <%== (el) -> can.data(can.$(el), \'foo\', this.from) %>>tea</span>';
-	var compiled = new can.EJS({
+	var compiled = new EJS({
 		text: html
 	})
 		.render(obj);
 	var div = document.createElement('div');
-	div.appendChild(can.view.frag(compiled));
+	div.appendChild(view.frag(compiled));
 	var span = div.getElementsByTagName('span')[0];
 	equal(can.data(can.$(span), 'foo'), obj.from, 'object matches');
 });
 //Issue 271
 test('live binding with html comment', function () {
 	var text = '<table><tr><th>Todo</th></tr><!-- do not bother with me -->' + '<% todos.each(function(todo){ %><tr><td><%= todo.name %></td></tr><% }) %></table>',
-		Todos = new can.List([{
+		Todos = new List([{
 			id: 1,
 			name: 'Dishes'
 		}]),
-		compiled = new can.EJS({
+		compiled = new EJS({
 			text: text
 		})
 			.render({
 				todos: Todos
 			}),
 		div = document.createElement('div');
-	div.appendChild(can.view.frag(compiled));
+	div.appendChild(view.frag(compiled));
 	equal(div.getElementsByTagName('table')[0].getElementsByTagName('td')
 		.length, 1, '1 item in list');
 	Todos.push({
@@ -1252,11 +1256,11 @@ test('HTML comment with element callback', function () {
 		'<% }) %>',
 		'</ul>'
 	],
-		Todos = new can.List([{
+		Todos = new List([{
 			id: 1,
 			name: 'Dishes'
 		}]),
-		compiled = new can.EJS({
+		compiled = new EJS({
 			text: text.join('\n')
 		})
 			.render({
@@ -1273,7 +1277,7 @@ test('HTML comment with element callback', function () {
 		}
 		return count;
 	};
-	div.appendChild(can.view.frag(compiled));
+	div.appendChild(view.frag(compiled));
 	li = div.getElementsByTagName('ul')[0].getElementsByTagName('li');
 	equal(li.length, 1, '1 item in list');
 	equal(comments(li[0]), 2, '2 comments in item #1');
@@ -1289,8 +1293,8 @@ test('HTML comment with element callback', function () {
 });
 // https://github.com/canjs/canjs/issues/153
 test('Interpolated values when iterating through an Observe.List should still render when not surrounded by a DOM node', function () {
-	can.view.ejs('issue-153-no-dom', '<% can.each(todos, function(todo) { %><span><%= todo.attr("name") %></span><% }) %>');
-	can.view.ejs('issue-153-dom', '<% can.each(todos, function(todo) { %><%= todo.attr("name") %><% }) %>');
+	view.ejs('issue-153-no-dom', '<% can.each(todos, function(todo) { %><span><%= todo.attr("name") %></span><% }) %>');
+	view.ejs('issue-153-dom', '<% can.each(todos, function(todo) { %><%= todo.attr("name") %><% }) %>');
 	var todos = [
 		new can.Map({
 			id: 1,
@@ -1302,22 +1306,22 @@ test('Interpolated values when iterating through an Observe.List should still re
 		})
 	],
 		data = {
-			todos: new can.List(todos)
+			todos: new List(todos)
 		}, arr = {
 			todos: todos
 		}, div = document.createElement('div');
-	div.appendChild(can.view('issue-153-no-dom', arr));
+	div.appendChild(view('issue-153-no-dom', arr));
 	equal(div.getElementsByTagName('span')[0].innerHTML, 'Dishes', 'Array item rendered with DOM container');
 	equal(div.getElementsByTagName('span')[1].innerHTML, 'Forks', 'Array item rendered with DOM container');
 	div = document.createElement('div');
-	div.appendChild(can.view('issue-153-no-dom', data));
+	div.appendChild(view('issue-153-no-dom', data));
 	equal(div.getElementsByTagName('span')[0].innerHTML, 'Dishes', 'List item rendered with DOM container');
 	equal(div.getElementsByTagName('span')[1].innerHTML, 'Forks', 'List item rendered with DOM container');
 	div = document.createElement('div');
-	div.appendChild(can.view('issue-153-dom', arr));
+	div.appendChild(view('issue-153-dom', arr));
 	equal(div.innerHTML, 'DishesForks', 'Array item rendered without DOM container');
 	div = document.createElement('div');
-	div.appendChild(can.view('issue-153-dom', data));
+	div.appendChild(view('issue-153-dom', data));
 	equal(div.innerHTML, 'DishesForks', 'List item rendered without DOM container');
 	data.todos.push(new can.Map({
 		id: 3,
@@ -1338,7 +1342,7 @@ test('correctness of data-view-id and only in tag opening', function () {
 			id: 2,
 			title: 'Two'
 		}],
-		compiled = new can.EJS({
+		compiled = new EJS({
 			text: text.join('')
 		})
 			.render({
@@ -1347,15 +1351,15 @@ test('correctness of data-view-id and only in tag opening', function () {
 		expected = '^<textarea data-view-id=\'[0-9]+\'><select><option data-view-id=\'[0-9]+\'>One</option>' + '<option data-view-id=\'[0-9]+\'>Two</option></select></textarea>$';
 	ok(compiled.search(expected) === 0, 'Rendered output is as expected');
 	// clear hookups b/c we are using .render;
-	can.view.hookups = {};
+	view.hookups = {};
 });
 test('return blocks within element tags', function () {
-	var animals = new can.List([
+	var animals = new List([
 		'sloth',
 		'bear'
 	]),
 		template = '<ul>' + '<%==lister(animals, function(animal){%>' + '<li><%=animal %></li>' + '<%})%>' + '</ul>';
-	var renderer = can.view.ejs(template);
+	var renderer = view.ejs(template);
 	var div = document.createElement('div');
 	var frag = renderer({
 		lister: function () {
@@ -1368,12 +1372,12 @@ test('return blocks within element tags', function () {
 	div.appendChild(frag);
 });
 test('Each does not redraw items', function () {
-	var animals = new can.List([
+	var animals = new List([
 		'sloth',
 		'bear'
 	]),
 		template = '<div>my<b>favorite</b>animals:' + '<%==each(animals, function(animal){%>' + '<label>Animal=</label> <span><%=animal %></span>' + '<%})%>' + '!</div>';
-	var renderer = can.view.ejs(template);
+	var renderer = view.ejs(template);
 	var div = document.createElement('div');
 	var frag = renderer({
 		animals: animals
@@ -1387,12 +1391,12 @@ test('Each does not redraw items', function () {
 	equal(div.getElementsByTagName('span')[2].innerHTML, 'turtle', 'turtle added');
 });
 test('Each works with no elements', function () {
-	var animals = new can.List([
+	var animals = new List([
 		'sloth',
 		'bear'
 	]),
 		template = '<%==each(animals, function(animal){%>' + '<%=animal %> ' + '<%})%>';
-	var renderer = can.view.ejs(template);
+	var renderer = view.ejs(template);
 	var div = document.createElement('div');
 	var frag = renderer({
 		animals: animals
@@ -1408,7 +1412,7 @@ test('Each does not redraw items (normal array)', function () {
 		'turtle'
 	],
 		template = '<div>my<b>favorite</b>animals:' + '<%each(animals, function(animal){%>' + '<label>Animal=</label> <span><%=animal %></span>' + '<%})%>' + '!</div>';
-	var renderer = can.view.ejs(template);
+	var renderer = view.ejs(template);
 	var div = document.createElement('div');
 	var frag = renderer({
 		animals: animals
@@ -1423,9 +1427,9 @@ test('Each does not redraw items (normal array)', function () {
 	equal(div.getElementsByTagName('span')[2].innerHTML, 'turtle', 'turtle added');
 });
 test('list works within another branch', function () {
-	var animals = new can.List([]),
+	var animals = new List([]),
 		template = '<div>Animals:' + '<% if( animals.attr(\'length\') ){ %>~' + '<% animals.each(function(animal){%>' + '<span><%=animal %></span>' + '<%})%>' + '<% } else { %>' + 'No animals' + '<% } %>' + '!</div>';
-	var renderer = can.view.ejs(template);
+	var renderer = view.ejs(template);
 	var div = document.createElement('div');
 	// $("#qunit-fixture").html(div);
 	var frag = renderer({
@@ -1440,9 +1444,9 @@ test('list works within another branch', function () {
 	equal(div.getElementsByTagName('div')[0].innerHTML, 'Animals:No animals!');
 });
 test('each works within another branch', function () {
-	var animals = new can.List([]),
+	var animals = new List([]),
 		template = '<div>Animals:' + '<% if( animals.attr(\'length\') ){ %>~' + '<%==each(animals, function(animal){%>' + '<span><%=animal %></span>' + '<%})%>' + '<% } else { %>' + 'No animals' + '<% } %>' + '!</div>';
-	var renderer = can.view.ejs(template);
+	var renderer = view.ejs(template);
 	var div = document.createElement('div');
 	var frag = renderer({
 		animals: animals
@@ -1456,13 +1460,13 @@ test('each works within another branch', function () {
 	equal(div.getElementsByTagName('div')[0].innerHTML, 'Animals:No animals!');
 });
 test('JS blocks within EJS tags shouldn\'t require isolation', function () {
-	var isolatedBlocks = can.view.ejs('<% if (true) { %>' + '<% if (true) {%>' + 'hi' + '<% } %>' + '<% } %>'),
-		sharedBlocks = can.view.ejs('<% if (true) { %>' + '<% if (true) { %>' + 'hi' + '<% }' + '} %>'),
-		complexIsolatedBlocks = can.view.ejs('<% if (true) { %><% if (1) { %>' + '<% if ({ dumb: \'literal\' }) { %>' + '<% list(items, function(item) { %>' + '<%== item %>' + '<%== something(function(items){ %><%== items.length %><% }) %>' + '<% }) %>' + '<% } %>' + '<% } %><% } %>'),
-		complexSharedBlocks = can.view.ejs('<% if (true) { if (1) { %>' + '<% if ({ dumb: \'literal\' }) { %>' + '<% list(items, function(item) { %>' + '<%== item %>' + '<%== something(function(items){ %><%== items.length %><% }) %>' + '<% }) %>' + '<% }' + '} } %>'),
-		iteratedSharedBlocks = can.view.ejs('<% for (var i = 0; i < items.length; i++) { %>' + '<% if (this.items) { if (1) { %>' + 'hi' + '<% } } else { %>' + 'nope' + '<% } } %>'),
-		iteratedString = can.view.ejs('<% for(var i = 0; i < items.length; i++) { %>' + '\t<% if(this.mode !== "RESULTS") {' + '\t\tif(items[i] !== "SOME_FAKE_VALUE") { %>' + '\t\t\thi' + '\t\t<% }' + '\t} else { %>' + '\t\tnope' + '\t<% }' + '} %>'),
-		iteratedStringNewLines = can.view.ejs('<% for(var i = 0; i < items.length; i++) { %>' + '\t<% if(this.mode !== "RESULTS") {\n' + '\t\tif(items[i] !== "SOME_FAKE_VALUE") { %>' + '\t\t\thi' + '\t\t<% }\n' + '\t} else { %>' + '\t\tnope' + '\t<% }\n' + '} %>'),
+	var isolatedBlocks = view.ejs('<% if (true) { %>' + '<% if (true) {%>' + 'hi' + '<% } %>' + '<% } %>'),
+		sharedBlocks = view.ejs('<% if (true) { %>' + '<% if (true) { %>' + 'hi' + '<% }' + '} %>'),
+		complexIsolatedBlocks = view.ejs('<% if (true) { %><% if (1) { %>' + '<% if ({ dumb: \'literal\' }) { %>' + '<% list(items, function(item) { %>' + '<%== item %>' + '<%== something(function(items){ %><%== items.length %><% }) %>' + '<% }) %>' + '<% } %>' + '<% } %><% } %>'),
+		complexSharedBlocks = view.ejs('<% if (true) { if (1) { %>' + '<% if ({ dumb: \'literal\' }) { %>' + '<% list(items, function(item) { %>' + '<%== item %>' + '<%== something(function(items){ %><%== items.length %><% }) %>' + '<% }) %>' + '<% }' + '} } %>'),
+		iteratedSharedBlocks = view.ejs('<% for (var i = 0; i < items.length; i++) { %>' + '<% if (this.items) { if (1) { %>' + 'hi' + '<% } } else { %>' + 'nope' + '<% } } %>'),
+		iteratedString = view.ejs('<% for(var i = 0; i < items.length; i++) { %>' + '\t<% if(this.mode !== "RESULTS") {' + '\t\tif(items[i] !== "SOME_FAKE_VALUE") { %>' + '\t\t\thi' + '\t\t<% }' + '\t} else { %>' + '\t\tnope' + '\t<% }' + '} %>'),
+		iteratedStringNewLines = view.ejs('<% for(var i = 0; i < items.length; i++) { %>' + '\t<% if(this.mode !== "RESULTS") {\n' + '\t\tif(items[i] !== "SOME_FAKE_VALUE") { %>' + '\t\t\thi' + '\t\t<% }\n' + '\t} else { %>' + '\t\tnope' + '\t<% }\n' + '} %>'),
 		data = {
 			items: [
 				'one',
@@ -1514,7 +1518,7 @@ test('JS blocks within EJS tags shouldn\'t require isolation', function () {
 		div.appendChild(iteratedStringNewLines(data));
 	} catch (ex) {}
 	ok(div.innerHTML.match(/^\s*hi\s*hi\s*hi\s*$/), 'Rendered iterated shared blocks string (with new lines)');
-	can.view.render(can.test.path('src/test/shared_blocks.ejs'), {
+	view.render(testHelper.path('src/test/shared_blocks.ejs'), {
 		items: [
 			'one',
 			'two',
@@ -1528,7 +1532,7 @@ test('JS blocks within EJS tags shouldn\'t require isolation', function () {
 // This won't be fixed as it would require a full JS parser
 /*
  test("Variables declared in shared EJS blocks shouldn't get lost", function() {
- var template = can.view.ejs(
+ var template = view.ejs(
  "<%" +
  "var bestTeam = teams[0];" +
  "can.each(teams, function(team) { %>" +
@@ -1536,7 +1540,7 @@ test('JS blocks within EJS tags shouldn\'t require isolation', function () {
  "<% }) %>" +
  "<div class='best'><%== bestTeam.name %>!</div>"),
  data = {
- teams: new can.List([
+ teams: new List([
  { name: "Packers", rank: 1 },
  { name: "Bears", rank: 2 },
  { name: "Vikings", rank: 3 },
@@ -1565,14 +1569,14 @@ test('Access .length with nested dot notation', function () {
 				3
 			]
 		}),
-		renderer = can.view.ejs(template),
+		renderer = view.ejs(template),
 		div = document.createElement('div');
 	div.appendChild(renderer(obj));
 	ok(div.getElementsByTagName('span')[0].innerHTML === '4', 'Nested dot notation.');
 	ok(div.getElementsByTagName('span')[1].innerHTML === '4', 'Not-nested dot notation.');
 });
 test('attributes in truthy section', function () {
-	var template = can.view.ejs('<p <% if(attribute) {%>data-test="<%=attribute%>"<% } %>></p>');
+	var template = view.ejs('<p <% if(attribute) {%>data-test="<%=attribute%>"<% } %>></p>');
 	var data1 = {
 		attribute: 'test-value'
 	};
@@ -1589,7 +1593,7 @@ test('attributes in truthy section', function () {
 	equal(div2.children[0].getAttribute('data-test'), 'test value', 'whitespace in attribute value');
 });
 test('outputting array of attributes', function () {
-	var template = can.view.ejs('<p <% for(var i = 0; i < attribute.length; i++) { %><%=attribute[i].name%>="<%=attribute[i].value%>"<%}%>></p>');
+	var template = view.ejs('<p <% for(var i = 0; i < attribute.length; i++) { %><%=attribute[i].name%>="<%=attribute[i].value%>"<%}%>></p>');
 	var data = {
 		attribute: [{
 			'name': 'data-test1',
@@ -1610,7 +1614,7 @@ test('outputting array of attributes', function () {
 	equal(div.children[0].getAttribute('data-test3'), 'value3', 'third value');
 });
 test('_bindings removed when element removed', function () {
-	var template = can.view.ejs('<div id="game"><% if(game.attr("league")) { %><%= game.attr("name") %><% } %></div>'),
+	var template = view.ejs('<div id="game"><% if(game.attr("league")) { %><%= game.attr("name") %><% } %></div>'),
 		game = new can.Map({
 			'name': 'Fantasy Baseball',
 			'league': 'Malamonsters'
