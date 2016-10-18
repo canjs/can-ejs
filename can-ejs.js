@@ -8,6 +8,7 @@ var namespace = require("can-util/namespace");
 var each = require("can-util/js/each/each");
 var types = require("can-util/js/types/types");
 var observationReader = require("can-observation/reader/reader");
+var DOCUMENT = require('can-util/dom/document/document');
 
 var templateId = 0;
 // ## Helper methods
@@ -191,6 +192,15 @@ EJS.Helpers.prototype = {
 			legacyHelpers.view.lists(list, cb);
 		}
 	}
+};
+
+var templates = {};
+EJS.from = function(id){
+	if(!templates[id]) {
+		var el = DOCUMENT().getElementById(id);
+		templates[id] = EJS(el.innerHTML);
+	}
+	return templates[id];
 };
 
 module.exports = EJS;
