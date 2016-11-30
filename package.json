@@ -24,16 +24,6 @@
     "develop": "can-serve --static --develop --port 8080"
   },
   "main": "can-ejs",
-  "browser": {
-    "transform": [
-      "cssify"
-    ]
-  },
-  "browserify": {
-    "transform": [
-      "cssify"
-    ]
-  },
   "keywords": [
     "CanJS",
     "MVVM"
@@ -64,7 +54,6 @@
   "devDependencies": {
     "can-list": "^3.0.0-pre.9",
     "can-map": "^3.0.0-pre.14",
-    "cssify": "^0.6.0",
     "documentjs": "^0.4.2",
     "donejs-cli": "^0.7.0",
     "generator-donejs": "^0.7.0",
