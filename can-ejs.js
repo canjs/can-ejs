@@ -4,9 +4,9 @@
 //
 var legacyHelpers = require('can-legacy-view-helpers');
 var extend = require("can-util/js/assign/assign");
-var namespace = require("can-util/namespace");
+var namespace = require("can-namespace");
 var each = require("can-util/js/each/each");
-var types = require("can-util/js/types/types");
+var types = require("can-types");
 var observationReader = require("can-observation/reader/reader");
 var DOCUMENT = require('can-util/dom/document/document');
 
