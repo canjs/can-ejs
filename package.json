@@ -28,7 +28,7 @@
     "CanJS",
     "MVVM"
   ],
-  "system": {
+  "steal": {
     "main": "can-ejs",
     "ext": {
       "ejs": "src/system"
@@ -42,8 +42,7 @@
       "generator-donejs",
       "donejs-cli",
       "steal-tools"
-    ],
-    "npmAlgorithm": "flat"
+    ]
   },
   "dependencies": {
     "can-compute": "^3.0.0",
@@ -60,9 +59,9 @@
     "donejs-cli": "^0.9.5",
     "generator-donejs": "^0.9.6",
     "jshint": "^2.9.1",
-    "steal": "^0.16.0",
-    "steal-qunit": "^0.1.4",
-    "steal-tools": "^0.16.1",
-    "testee": "^0.3.0"
+    "steal": "^1.2.8",
+    "steal-qunit": "^1.0.1",
+    "steal-tools": "^1.1.2",
+    "testee": "^0.3.1"
   }
 }
