@@ -56,7 +56,7 @@
     "can-list": "^3.0.1",
     "can-map": "^3.0.3",
     "documentjs": "^0.4.2",
-    "donejs-cli": "^0.9.5",
+    "donejs-cli": "^1.0.0",
     "generator-donejs": "^0.9.6",
     "jshint": "^2.9.1",
     "steal": "^1.2.8",
