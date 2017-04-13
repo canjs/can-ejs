@@ -1390,6 +1390,6 @@ test('_bindings removed when element removed', function () {
 	stop();
 	setTimeout(function () {
 		start();
-		equal(game._bindings, 0, 'No bindings left');
+		equal(game.__bindEvents._lifecycleBindings, 0, 'No bindings left');
 	}, 50);
 });
