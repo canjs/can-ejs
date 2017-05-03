@@ -1,5 +1,7 @@
 # can-ejs
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/canjs/can-ejs.svg)](https://greenkeeper.io/)
+
 [![Build Status](https://travis-ci.org/canjs/can-ejs.png?branch=master)](https://travis-ci.org/canjs/can-ejs)
 
 **DO NOT USE - NOT PRODUCTION READY**
