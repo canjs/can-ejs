@@ -6,7 +6,7 @@ var legacyHelpers = require('can-legacy-view-helpers');
 var extend = require("can-util/js/assign/assign");
 var namespace = require("can-namespace");
 var each = require("can-util/js/each/each");
-var types = require("can-types");
+var canReflect = require("can-reflect");
 var observationReader = require("can-observation/reader/reader");
 var DOCUMENT = require('can-util/dom/document/document');
 
@@ -175,7 +175,7 @@ EJS.Helpers = function (data, extras) {
 EJS.Helpers.prototype = {
 	// List allows for live binding a can.List easily within a template.
 	list: function (list, cb) {
-		if(types.isListLike(list)) {
+		if(canReflect.isObservableLike(list) && canReflect.isListLike(list)) {
 			observationReader.get(list, 'length');
 		}
 		each(list, function (item, i) {
