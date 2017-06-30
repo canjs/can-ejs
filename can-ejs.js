@@ -7,7 +7,7 @@ var extend = require("can-util/js/assign/assign");
 var namespace = require("can-namespace");
 var each = require("can-util/js/each/each");
 var canReflect = require("can-reflect");
-var observationReader = require("can-observation/reader/reader");
+var observationReader = require("can-stache-key");
 var DOCUMENT = require('can-util/dom/document/document');
 
 var templateId = 0;
