@@ -48,7 +48,7 @@
     "can-compute": "^3.3.0",
     "can-legacy-view-helpers": "^0.6.0-pre.0",
     "can-namespace": "^1.0.0",
-    "can-observation": "^3.3.0",
+    "can-observation": "3.3.1",
     "can-reflect": "^1.1.0",
     "can-stache-key": "0.0.3",
     "can-util": "^3.9.0-pre.4"
