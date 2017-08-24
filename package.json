@@ -20,7 +20,6 @@
     "release:minor": "npm version minor && npm publish",
     "release:major": "npm version major && npm publish",
     "build": "node build.js",
-    "document": "documentjs",
     "develop": "can-serve --static --develop --port 8080"
   },
   "main": "can-ejs",
@@ -56,7 +55,6 @@
   "devDependencies": {
     "can-list": "^3.1.0-pre.9",
     "can-map": "^3.1.0-pre.10",
-    "documentjs": "^0.5.0",
     "jshint": "^2.9.1",
     "steal": "^1.2.8",
     "steal-qunit": "^1.0.1",
