@@ -30,8 +30,11 @@
   "steal": {
     "main": "can-ejs",
     "ext": {
-      "ejs": "src/system"
+      "ejs": "can-ejs/steal-ejs.js"
     },
+    "plugins": [
+      "can-ejs"
+    ],
     "configDependencies": [
       "live-reload"
     ],
@@ -56,9 +59,9 @@
     "can-list": "^3.1.0",
     "can-map": "^3.1.0",
     "jshint": "^2.9.1",
-    "steal": "^1.2.8",
+    "steal": "^1.5.13",
     "steal-qunit": "^1.0.1",
-    "steal-tools": "^1.1.2",
+    "steal-tools": "^1.8.4",
     "testee": "^0.7.0"
   }
 }
