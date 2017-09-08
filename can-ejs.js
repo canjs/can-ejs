@@ -8,7 +8,7 @@ var namespace = require("can-namespace");
 var each = require("can-util/js/each/each");
 var canReflect = require("can-reflect");
 var observationReader = require("can-stache-key");
-var DOCUMENT = require('can-util/dom/document/document');
+var DOCUMENT = require('can-globals/document/document');
 
 var templateId = 0;
 // ## Helper methods
