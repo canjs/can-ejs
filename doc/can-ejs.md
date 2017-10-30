@@ -1,5 +1,6 @@
 @module {function} can-ejs
-@parent can-legacy
+@parent can-views
+@collection can-legacy
 @package ../package.json
 @group can-ejs/tags 0 tags
 @group can-ejs/methods 1 methods
