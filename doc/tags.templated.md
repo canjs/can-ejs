@@ -1,5 +1,5 @@
 @function can-ejs/tags.templated <%% CODE %>
-@parent can-ejs/tags.tags 3
+@parent can-ejs/tags 3
 
 @signature `<%% CODE %>`
 
