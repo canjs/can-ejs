@@ -7,6 +7,8 @@ var CanList = require("can-list");
 var canFrag = require("can-util/dom/frag/frag");
 var canCompute = require("can-compute");
 var domMutate = require("can-util/dom/mutate/mutate");
+var domEvents = require('can-util/dom/events/events');
+var globals = require('can-globals');
 
 QUnit.module('can-ejs, rendering', {
 	setup: function () {
@@ -1374,22 +1376,33 @@ test('outputting array of attributes', function () {
 	equal(div.children[0].getAttribute('data-test2'), 'value2', 'second value');
 	equal(div.children[0].getAttribute('data-test3'), 'value3', 'third value');
 });
-test('_bindings removed when element removed', function () {
-	var template = EJS('<div id="game"><% if(game.attr("league")) { %><%= game.attr("name") %><% } %></div>'),
-		game = new CanMap({
-			'name': 'Fantasy Baseball',
-			'league': 'Malamonsters'
-		});
-	var frag = template({
-		game: game
+
+function afterMutation (cb) {
+	var doc = globals.getKeyValue('document');
+	var div = doc.createElement("div");
+	domEvents.addEventListener.call(div, "inserted", function(){
+		doc.body.removeChild(div);
+		setTimeout(cb, 5);
 	});
+	setTimeout(function(){
+		domMutate.appendChild.call(doc.body, div);
+	}, 10);
+}
+
+test('_bindings removed when element removed', function (assert) {
+	var done = assert.async();
 	var div = document.getElementById("qunit-fixture");
+	var game = new CanMap({
+		'name': 'Fantasy Baseball',
+		'league': 'Malamonsters'
+	});
+	var template = EJS('<div id="game"><% if(game.attr("league")) { %><%= game.attr("name") %><% } %></div>');
+	var frag = template({game: game});
 
 	div.appendChild(frag);
 	domMutate.removeChild.call(div, div.firstChild);
-	stop();
-	setTimeout(function () {
-		start();
-		equal(game.__bindEvents._lifecycleBindings, 0, 'No bindings left');
-	}, 100);
+	afterMutation(function () {
+		assert.equal(game.__bindEvents._lifecycleBindings, 0, 'No bindings left');
+		done();
+	});
 });
