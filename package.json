@@ -48,7 +48,7 @@
     ]
   },
   "dependencies": {
-    "can-compute": "^3.3.0",
+    "can-compute": "^4.0.2",
     "can-globals": "<2.0.0",
     "can-legacy-view-helpers": "^0.6.0",
     "can-namespace": "^1.0.0",
