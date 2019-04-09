@@ -17,9 +17,15 @@ var EJS = function (options) {
 		// This returns a function that renders the template.
 		if (!this || this.constructor !== EJS) {
 			var ejs = new EJS(options);
-			return function (data, helpers) {
+			var renderer = function (data, helpers) {
 				return legacyHelpers.view.frag( ejs.render(data, helpers) );
 			};
+			renderer.renderType = "fragment";
+			renderer.renderAsString = function (data, helpers) {
+				return ejs.render(data, helpers);
+			};
+			renderer.renderAsString.renderType = "string";
+			return renderer;
 		}
 		// If we get a `function` directly, it probably is coming from
 		// a `steal`-packaged view.
@@ -204,3 +210,4 @@ EJS.from = function(id){
 };
 
 module.exports = EJS;
+
