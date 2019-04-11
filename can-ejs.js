@@ -9,6 +9,7 @@ var each = require("can-util/js/each/each");
 var canReflect = require("can-reflect");
 var observationReader = require("can-stache-key");
 var DOCUMENT = require('can-globals/document/document');
+var view = legacyHelpers.view;
 
 var templateId = 0;
 // ## Helper methods
@@ -17,9 +18,15 @@ var EJS = function (options) {
 		// This returns a function that renders the template.
 		if (!this || this.constructor !== EJS) {
 			var ejs = new EJS(options);
-			return function (data, helpers) {
+			var renderer = function (data, helpers) {
 				return legacyHelpers.view.frag( ejs.render(data, helpers) );
 			};
+			renderer.renderType = "fragment";
+			renderer.renderAsString = function (data, helpers) {
+				return ejs.render(data, helpers);
+			};
+			renderer.renderAsString.renderType = "string";
+			return renderer;
 		}
 		// If we get a `function` directly, it probably is coming from
 		// a `steal`-packaged view.
@@ -169,6 +176,7 @@ extend(EJS.prototype, {
 EJS.Helpers = function (data, extras) {
 	this._data = data;
 	this._extras = extras;
+	this.can = namespace;
 	extend(this, extras);
 };
 
@@ -203,4 +211,23 @@ EJS.from = function(id){
 	return templates[id];
 };
 
+view.register({
+	suffix: 'ejs',
+	script: function (id, src) {
+		return 'can.EJS(function(_CONTEXT,_VIEW) { ' + new EJS({
+			text: src,
+			name: id
+		})
+			.template.out + ' })';
+	},
+	renderer: function (id, text) {
+		return EJS({
+			text: text,
+			name: id
+		});
+	}
+});
+
+
 module.exports = EJS;
+

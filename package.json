@@ -50,7 +50,7 @@
   "dependencies": {
     "can-compute": "^3.3.0",
     "can-globals": "<2.0.0",
-    "can-legacy-view-helpers": "^0.6.0",
+    "can-legacy-view-helpers": "^1.0.0",
     "can-namespace": "^1.0.0",
     "can-observation": "^3.3.0",
     "can-reflect": "^1.1.0",
@@ -65,6 +65,6 @@
     "steal": "^1.5.13",
     "steal-qunit": "^1.0.1",
     "steal-tools": "^1.8.4",
-    "testee": "^0.7.0"
+    "testee": "^0.9.0"
   }
 }
