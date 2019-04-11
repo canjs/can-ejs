@@ -4,9 +4,10 @@ var CanMap = require("can-map");
 var legacyHelpers = require("can-legacy-view-helpers");
 var domData = require("can-util/dom/data/data");
 var CanList = require("can-list");
-var canFrag = require("can-util/dom/frag/frag");
+var can = require("can-namespace");
 var canCompute = require("can-compute");
 var domMutate = require("can-util/dom/mutate/mutate");
+var Deferred = require("can-legacy-view-helpers/deferred");
 
 QUnit.module('can-ejs, rendering', {
 	setup: function () {
@@ -1392,4 +1393,64 @@ test('_bindings removed when element removed', function () {
 		start();
 		equal(game.__bindEvents._lifecycleBindings, 0, 'No bindings left');
 	}, 100);
+});
+// Note:  unsure if this is the same as calling from CanJS 2.3. What is known
+//  is that just passing new EJS({...}) into can.view.render doesn't work, but
+//  that's not the normal calling pattern anyway.  See the next test for how
+//  it's usually done.
+test("can.view.render() returns string (existing render func)", function() {
+	var compiled = can.view.render(
+		new EJS({
+			text: this.angleBracketsNoThis
+		}).template.fn,
+		{ animals: this.animals },
+		{}
+	);
+	equal(compiled, '<ul><li>sloth</li><li>bear</li><li>monkey</li></ul>');
+});
+test("can.view.render() returns string (path)", function() {
+	var compiled = can.view.render(
+		__dirname + "/binding.ejs",
+		{
+			task: { 
+				attr(key) {
+					return ({completed: true, name: "foo"})[key]; 
+				} 
+			}
+		}
+	);
+	equal(typeof compiled, "string", "a string is returned (not hooked up)");
+	ok(/<div[^>]+data-view-id/.test(compiled), "String is awaiting hookup");
+	var div = document.createElement('div');
+	var frag = legacyHelpers.view.frag(compiled, div);
+	div.appendChild(frag);
+	equal(div.innerHTML, '<div class="complete">\n\tfoo\n</div>\n');
+});
+test("can.view.render() can be called from within EJS", function() {
+	var compiled = new EJS({
+			text: '<div class="outer"><%== can.view.render( "' + __dirname + '/binding.ejs", this ) %></div>'
+		}).render({
+			task: { 
+				attr(key) {
+					return ({completed: true, name: "foo"})[key]; 
+				} 
+			}
+		}
+	);
+	var div = document.createElement('div');
+	div.appendChild(legacyHelpers.view.frag(compiled));
+	equal(div.innerHTML, '<div class="outer"><div class="complete">\n\tfoo\n</div>\n</div>');
+});
+
+test("can.view.render() with a deferred", function() {
+	var compiled = can.view.render(
+		new EJS({
+			text: this.angleBracketsNoThis
+		}).template.fn,
+		{ animals: new Deferred().resolve(this.animals) },
+		{}
+	);
+	ok(compiled instanceof Deferred, "result is a deferred");
+	equal(compiled.state(), "resolved", "deferral is sync (already resolved because the sources are resolved)");
+	equal(compiled._resultArgs[0], '<ul><li>sloth</li><li>bear</li><li>monkey</li></ul>');
 });

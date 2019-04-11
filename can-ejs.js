@@ -9,6 +9,7 @@ var each = require("can-util/js/each/each");
 var canReflect = require("can-reflect");
 var observationReader = require("can-stache-key");
 var DOCUMENT = require('can-globals/document/document');
+var view = legacyHelpers.view;
 
 var templateId = 0;
 // ## Helper methods
@@ -175,6 +176,7 @@ extend(EJS.prototype, {
 EJS.Helpers = function (data, extras) {
 	this._data = data;
 	this._extras = extras;
+	this.can = namespace;
 	extend(this, extras);
 };
 
@@ -208,6 +210,24 @@ EJS.from = function(id){
 	}
 	return templates[id];
 };
+
+view.register({
+	suffix: 'ejs',
+	script: function (id, src) {
+		return 'can.EJS(function(_CONTEXT,_VIEW) { ' + new EJS({
+			text: src,
+			name: id
+		})
+			.template.out + ' })';
+	},
+	renderer: function (id, text) {
+		return EJS({
+			text: text,
+			name: id
+		});
+	}
+});
+
 
 module.exports = EJS;
 
