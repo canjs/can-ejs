@@ -1408,9 +1408,33 @@ test("can.view.render() returns string (existing render func)", function() {
 	);
 	equal(compiled, '<ul><li>sloth</li><li>bear</li><li>monkey</li></ul>');
 });
-test("can.view.render() returns string (path)", function() {
-	var compiled = can.view.render(
-		__dirname + "/binding.ejs",
+if (__dirname !== '/') {
+	test("can.view.render() returns string (path)", function() {
+		var compiled = can.view.render(
+			__dirname + "/binding.ejs",
+			{
+				task: { 
+					attr(key) {
+						return ({completed: true, name: "foo"})[key]; 
+					} 
+				}
+			}
+		);
+		equal(typeof compiled, "string", "a string is returned (not hooked up)");
+		ok(/<div[^>]+data-view-id/.test(compiled), "String is awaiting hookup");
+		var div = document.createElement('div');
+		var frag = legacyHelpers.view.frag(compiled, div);
+		div.appendChild(frag);
+		equal(div.innerHTML, '<div class="complete">\n\tfoo\n</div>\n');
+	});
+}
+
+test("can.view() creates and hooks up fragment correctly (EJS render func)", function() {
+	var bindingEJS = EJS('<div class=\'<%= task.attr(\'completed\') ? "complete" : "" %>\'>\n' +
+												"\t<%== task.attr('name') %>\n" +
+												'</div>\n');
+	var compiled = can.view(
+		bindingEJS,
 		{
 			task: { 
 				attr(key) {
@@ -1419,28 +1443,46 @@ test("can.view.render() returns string (path)", function() {
 			}
 		}
 	);
-	equal(typeof compiled, "string", "a string is returned (not hooked up)");
-	ok(/<div[^>]+data-view-id/.test(compiled), "String is awaiting hookup");
 	var div = document.createElement('div');
-	var frag = legacyHelpers.view.frag(compiled, div);
-	div.appendChild(frag);
+	div.appendChild(compiled);
 	equal(div.innerHTML, '<div class="complete">\n\tfoo\n</div>\n');
 });
-test("can.view.render() can be called from within EJS", function() {
+
+test("can.view.render() can be called from within EJS (renderer)", function() {
 	var compiled = new EJS({
-			text: '<div class="outer"><%== can.view.render( "' + __dirname + '/binding.ejs", this ) %></div>'
+			text: '<div class="outer"><%== can.view.render( subEJS, this ) %></div>'
 		}).render({
 			task: { 
 				attr(key) {
 					return ({completed: true, name: "foo"})[key]; 
 				} 
 			}
+		},
+		{
+			subEJS: EJS('<div class="complete"><%= task.attr("name") %></div>')
 		}
 	);
 	var div = document.createElement('div');
 	div.appendChild(legacyHelpers.view.frag(compiled));
-	equal(div.innerHTML, '<div class="outer"><div class="complete">\n\tfoo\n</div>\n</div>');
+	equal(div.innerHTML, '<div class="outer"><div class="complete">foo</div></div>');
 });
+if (__dirname !== '/') {
+	test("can.view.render() can be called from within EJS (path)", function() {
+		var compiled = new EJS({
+				text: '<div class="outer"><%== can.view.render( "' + __dirname + '/binding.ejs", this ) %></div>'
+			}).render({
+				task: { 
+					attr(key) {
+						return ({completed: true, name: "foo"})[key]; 
+					} 
+				}
+			}
+		);
+		var div = document.createElement('div');
+		div.appendChild(legacyHelpers.view.frag(compiled));
+		equal(div.innerHTML, '<div class="outer"><div class="complete">\n\tfoo\n</div>\n</div>');
+	});
+}
 
 test("can.view.render() with a deferred", function() {
 	var compiled = can.view.render(
