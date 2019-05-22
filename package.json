@@ -58,7 +58,7 @@
     "can-util": "^3.9.0"
   },
   "devDependencies": {
-    "can-list": "^3.1.0",
+    "can-list": "^4.2.1",
     "can-map": "^3.1.0",
     "detect-cyclic-packages": "^1.1.0",
     "jshint": "^2.9.1",
