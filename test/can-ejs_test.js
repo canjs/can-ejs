@@ -10,7 +10,7 @@ var domMutate = require("can-util/dom/mutate/mutate");
 var Deferred = require("can-legacy-view-helpers/deferred");
 
 QUnit.module('can-ejs, rendering', {
-	setup: function () {
+	beforeEach: function(assert) {
 
 		this.animals = [
 			'sloth',
@@ -32,7 +32,7 @@ QUnit.module('can-ejs, rendering', {
 var getAttr = function (el, attrName) {
 	return attrName === 'class' ? el.className : el.getAttribute(attrName);
 };
-test('render with left bracket', function () {
+QUnit.test('render with left bracket', function(assert) {
 	var compiled = new EJS({
 		text: this.squareBrackets,
 		type: '['
@@ -40,9 +40,9 @@ test('render with left bracket', function () {
 		.render({
 			animals: this.animals
 		});
-	equal(compiled, '<ul><li>sloth</li><li>bear</li><li>monkey</li></ul>', 'renders with bracket');
+	assert.equal(compiled, '<ul><li>sloth</li><li>bear</li><li>monkey</li></ul>', 'renders with bracket');
 });
-test('render with with', function () {
+QUnit.test('render with with', function(assert) {
 	var compiled = new EJS({
 		text: this.squareBracketsNoThis,
 		type: '['
@@ -50,18 +50,18 @@ test('render with with', function () {
 		.render({
 			animals: this.animals
 		});
-	equal(compiled, '<ul><li>sloth</li><li>bear</li><li>monkey</li></ul>', 'renders bracket with no this');
+	assert.equal(compiled, '<ul><li>sloth</li><li>bear</li><li>monkey</li></ul>', 'renders bracket with no this');
 });
-test('default carrot', function () {
+QUnit.test('default carrot', function(assert) {
 	var compiled = new EJS({
 		text: this.angleBracketsNoThis
 	})
 		.render({
 			animals: this.animals
 		});
-	equal(compiled, '<ul><li>sloth</li><li>bear</li><li>monkey</li></ul>');
+	assert.equal(compiled, '<ul><li>sloth</li><li>bear</li><li>monkey</li></ul>');
 });
-test('render with double angle', function () {
+QUnit.test('render with double angle', function(assert) {
 	var text = '<%% replace_me %>' + '<ul><% animals.each(function(animal){%>' + '<li><%= animal %></li>' + '<%});%></ul>';
 	var compiled = new EJS({
 		text: text
@@ -69,9 +69,9 @@ test('render with double angle', function () {
 		.render({
 			animals: this.animals
 		});
-	equal(compiled, '<% replace_me %><ul><li>sloth</li><li>bear</li><li>monkey</li></ul>', 'works');
+	assert.equal(compiled, '<% replace_me %><ul><li>sloth</li><li>bear</li><li>monkey</li></ul>', 'works');
 });
-test('comments', function () {
+QUnit.test('comments', function(assert) {
 	var text = '<%# replace_me %>' + '<ul><% animals.each(function(animal){%>' + '<li><%= animal %></li>' + '<%});%></ul>';
 	var compiled = new EJS({
 		text: text
@@ -79,17 +79,17 @@ test('comments', function () {
 		.render({
 			animals: this.animals
 		});
-	equal(compiled, '<ul><li>sloth</li><li>bear</li><li>monkey</li></ul>');
+	assert.equal(compiled, '<ul><li>sloth</li><li>bear</li><li>monkey</li></ul>');
 });
-test('multi line', function () {
+QUnit.test('multi line', function(assert) {
 	var text = 'a \n b \n c',
 		result = new EJS({
 			text: text
 		})
 			.render({});
-	equal(result, text);
+	assert.equal(result, text);
 });
-test('multi line elements', function () {
+QUnit.test('multi line elements', function(assert) {
 	var text = '<img\n class="<%=myClass%>" />',
 		result = new EJS({
 			text: text
@@ -97,11 +97,11 @@ test('multi line elements', function () {
 			.render({
 				myClass: 'a'
 			});
-	ok(result.indexOf('<img\n class="a"') !== -1, 'Multi-line elements render correctly.');
+	assert.ok(result.indexOf('<img\n class="a"') !== -1, 'Multi-line elements render correctly.');
 	// clear hookups b/c we are using .render;
 	legacyHelpers.view.hookups = {};
 });
-test('escapedContent', function () {
+QUnit.test('escapedContent', function(assert) {
 	var text = '<span><%= tags %></span><label>&amp;</label><strong><%= number %></strong><input value=\'<%= quotes %>\'/>';
 	var compiled = new EJS({
 		text: text
@@ -113,14 +113,14 @@ test('escapedContent', function () {
 		});
 	var div = document.createElement('div');
 	div.innerHTML = compiled;
-	equal(div.getElementsByTagName('span')[0].firstChild.nodeValue, 'foo < bar < car > zar > poo');
-	equal(div.getElementsByTagName('strong')[0].firstChild.nodeValue, 123);
-	equal(div.getElementsByTagName('input')[0].value, 'I use \'quote\' fingers "a lot"');
-	equal(div.getElementsByTagName('label')[0].innerHTML, '&amp;');
+	assert.equal(div.getElementsByTagName('span')[0].firstChild.nodeValue, 'foo < bar < car > zar > poo');
+	assert.equal(div.getElementsByTagName('strong')[0].firstChild.nodeValue, 123);
+	assert.equal(div.getElementsByTagName('input')[0].value, 'I use \'quote\' fingers "a lot"');
+	assert.equal(div.getElementsByTagName('label')[0].innerHTML, '&amp;');
 	// clear hookups b/c we are using .render;
 	legacyHelpers.view.hookups = {};
 });
-test('unescapedContent', function () {
+QUnit.test('unescapedContent', function(assert) {
 	var text = '<span><%== tags %></span><div><%= tags %></div><input value=\'<%== quotes %>\'/>';
 	var compiled = new EJS({
 		text: text
@@ -131,14 +131,14 @@ test('unescapedContent', function () {
 		});
 	var div = document.createElement('div');
 	div.innerHTML = compiled;
-	equal(div.getElementsByTagName('span')[0].firstChild.nodeType, 1);
-	equal(div.getElementsByTagName('div')[0].firstChild.nodeValue.toLowerCase(), '<strong>foo</strong><strong>bar</strong>');
-	equal(div.getElementsByTagName('span')[0].innerHTML.toLowerCase(), '<strong>foo</strong><strong>bar</strong>');
-	equal(div.getElementsByTagName('input')[0].value, 'I use \'quote\' fingers "a lot"', 'escapped no matter what');
+	assert.equal(div.getElementsByTagName('span')[0].firstChild.nodeType, 1);
+	assert.equal(div.getElementsByTagName('div')[0].firstChild.nodeValue.toLowerCase(), '<strong>foo</strong><strong>bar</strong>');
+	assert.equal(div.getElementsByTagName('span')[0].innerHTML.toLowerCase(), '<strong>foo</strong><strong>bar</strong>');
+	assert.equal(div.getElementsByTagName('input')[0].value, 'I use \'quote\' fingers "a lot"', 'escapped no matter what');
 	// clear hookups b/c we are using .render;
 	legacyHelpers.view.hookups = {};
 });
-test('returning blocks', function () {
+QUnit.test('returning blocks', function(assert) {
 	var somethingHelper = function (cb) {
 		return cb([
 			1,
@@ -167,11 +167,11 @@ test('returning blocks', function () {
 		]
 	});
 	// make sure expected values are in res
-	ok(/\s4\s/.test(res), 'first block called');
-	equal(res.match(/ItemsLength4/g)
+	assert.ok(/\s4\s/.test(res), 'first block called');
+	assert.equal(res.match(/ItemsLength4/g)
 		.length, 4, 'innerBlock and each');
 });
-test('easy hookup', function () {
+QUnit.test('easy hookup', function(assert) {
 	var div = document.createElement('div');
 	var templateStr = "<div <%= (el)-> el.className = text %>>";
 	var template = EJS(templateStr);
@@ -179,9 +179,9 @@ test('easy hookup', function () {
 		text: 'yes'
 	});
 	div.appendChild(res);
-	ok(div.getElementsByTagName('div')[0].className.indexOf('yes') !== -1, 'has yes');
+	assert.ok(div.getElementsByTagName('div')[0].className.indexOf('yes') !== -1, 'has yes');
 });
-test('multiple function hookups in a tag', function () {
+QUnit.test('multiple function hookups in a tag', function(assert) {
 	var text = '<span <%= (el)-> domData.set.call(el,\'foo\',\'bar\') %>' + ' <%= (el)-> domData.set.call(el,\'baz\',\'qux\') %>>lorem ipsum</span>',
 		compiled = new EJS({
 			text: text
@@ -190,10 +190,10 @@ test('multiple function hookups in a tag', function () {
 		div = document.createElement('div');
 	div.appendChild(legacyHelpers.view.frag(compiled));
 	var span = div.getElementsByTagName('span')[0];
-	equal(domData.get.call(span, 'foo'), 'bar', 'first hookup');
-	equal(domData.get.call(span, 'baz'), 'qux', 'second hookup');
+	assert.equal(domData.get.call(span, 'foo'), 'bar', 'first hookup');
+	assert.equal(domData.get.call(span, 'baz'), 'qux', 'second hookup');
 });
-test('helpers', function () {
+QUnit.test('helpers', function(assert) {
 	EJS.Helpers.prototype.simpleHelper = function () {
 		return 'Simple';
 	};
@@ -207,7 +207,7 @@ test('helpers', function () {
 		text: text
 	})
 		.render();
-	equal(compiled, '<div>Simple</div>');
+	assert.equal(compiled, '<div>Simple</div>');
 	text = '<div id="hookup" <%= elementHelper() %>></div>';
 	compiled = new EJS({
 		text: text
@@ -218,9 +218,9 @@ test('helpers', function () {
 	qF.appendChild(legacyHelpers.view.frag(compiled));
 	var hookup = document.getElementById("hookup");
 
-	equal(hookup.innerHTML, 'Simple');
+	assert.equal(hookup.innerHTML, 'Simple');
 });
-test('list helper', function () {
+QUnit.test('list helper', function(assert) {
 	var text = '<% list(todos, function(todo){ %><div><%= todo.name %></div><% }) %>';
 	var todos = new CanList([{
 		id: 1,
@@ -234,25 +234,25 @@ test('list helper', function () {
 			}),
 		div = document.createElement('div');
 	div.appendChild(legacyHelpers.view.frag(compiled));
-	equal(div.getElementsByTagName('div')
+	assert.equal(div.getElementsByTagName('div')
 		.length, 1, '1 item in list');
 	todos.push({
 		id: 2,
 		name: 'Laundry'
 	});
-	equal(div.getElementsByTagName('div')
+	assert.equal(div.getElementsByTagName('div')
 		.length, 2, '2 items in list');
 	todos.splice(0, 2);
-	equal(div.getElementsByTagName('div')
+	assert.equal(div.getElementsByTagName('div')
 		.length, 0, '0 items in list');
 	todos.push({
 		id: 4,
 		name: 'Pick up sticks'
 	});
-	equal(div.getElementsByTagName('div')
+	assert.equal(div.getElementsByTagName('div')
 		.length, 1, '1 item in list again');
 });
-test('attribute single unescaped, html single unescaped', function () {
+QUnit.test('attribute single unescaped, html single unescaped', function(assert) {
 	var text = '<div id=\'me\' class=\'<%== task.attr(\'completed\') ? \'complete\' : \'\'%>\'><%== task.attr(\'name\') %></div>';
 	var task = new CanMap({
 		name: 'dishes'
@@ -265,15 +265,15 @@ test('attribute single unescaped, html single unescaped', function () {
 		});
 	var div = document.createElement('div');
 	div.appendChild(legacyHelpers.view.frag(compiled));
-	equal(div.getElementsByTagName('div')[0].innerHTML, 'dishes', 'html correctly dishes');
-	equal(div.getElementsByTagName('div')[0].className, '', 'class empty');
+	assert.equal(div.getElementsByTagName('div')[0].innerHTML, 'dishes', 'html correctly dishes');
+	assert.equal(div.getElementsByTagName('div')[0].className, '', 'class empty');
 	task.attr('name', 'lawn');
-	equal(div.getElementsByTagName('div')[0].innerHTML, 'lawn', 'html correctly lawn');
-	equal(div.getElementsByTagName('div')[0].className, '', 'class empty');
+	assert.equal(div.getElementsByTagName('div')[0].innerHTML, 'lawn', 'html correctly lawn');
+	assert.equal(div.getElementsByTagName('div')[0].className, '', 'class empty');
 	task.attr('completed', true);
-	equal(div.getElementsByTagName('div')[0].className, 'complete', 'class changed to complete');
+	assert.equal(div.getElementsByTagName('div')[0].className, 'complete', 'class changed to complete');
 });
-test('select live binding', function () {
+QUnit.test('select live binding', function(assert) {
 	var text = '<select><% todos.each(function(todo){ %><option><%= todo.name %></option><% }) %></select>',
 		Todos = new CanList([{
 			id: 1,
@@ -287,19 +287,19 @@ test('select live binding', function () {
 			}),
 		div = document.createElement('div');
 	div.appendChild(legacyHelpers.view.frag(compiled));
-	equal(div.getElementsByTagName('option')
+	assert.equal(div.getElementsByTagName('option')
 		.length, 1, '1 item in list');
 	Todos.push({
 		id: 2,
 		name: 'Laundry'
 	});
-	equal(div.getElementsByTagName('option')
+	assert.equal(div.getElementsByTagName('option')
 		.length, 2, '2 items in list');
 	Todos.splice(0, 2);
-	equal(div.getElementsByTagName('option')
+	assert.equal(div.getElementsByTagName('option')
 		.length, 0, '0 items in list');
 });
-test('block live binding', function () {
+QUnit.test('block live binding', function(assert) {
 	var text = '<div><% if( obs.attr(\'sex\') == \'male\' ){ %>' + '<span>Mr.</span>' + '<% } else { %>' + '<label>Ms.</label>' + '<% } %>' + '</div>';
 	var obs = new CanMap({
 		sex: 'male'
@@ -314,13 +314,13 @@ test('block live binding', function () {
 	div.appendChild(legacyHelpers.view.frag(compiled));
 	// We have to test using nodeName and innerHTML (and not outerHTML) because IE 8 and under treats
 	// user-defined properties on nodes as attributes.
-	equal(div.getElementsByTagName('div')[0].firstChild.nodeName.toUpperCase(), 'SPAN', 'initial span tag');
-	equal(div.getElementsByTagName('div')[0].firstChild.innerHTML, 'Mr.', 'initial span content');
+	assert.equal(div.getElementsByTagName('div')[0].firstChild.nodeName.toUpperCase(), 'SPAN', 'initial span tag');
+	assert.equal(div.getElementsByTagName('div')[0].firstChild.innerHTML, 'Mr.', 'initial span content');
 	obs.attr('sex', 'female');
-	equal(div.getElementsByTagName('div')[0].firstChild.nodeName.toUpperCase(), 'LABEL', 'updated label tag');
-	equal(div.getElementsByTagName('div')[0].firstChild.innerHTML, 'Ms.', 'updated label content');
+	assert.equal(div.getElementsByTagName('div')[0].firstChild.nodeName.toUpperCase(), 'LABEL', 'updated label tag');
+	assert.equal(div.getElementsByTagName('div')[0].firstChild.innerHTML, 'Ms.', 'updated label content');
 });
-test('hookups in tables', function () {
+QUnit.test('hookups in tables', function(assert) {
 	var text = '<table><tbody><% if( obs.attr(\'sex\') == \'male\' ){ %>' + '<tr><td>Mr.</td></tr>' + '<% } else { %>' + '<tr><td>Ms.</td></tr>' + '<% } %>' + '</tbody></table>';
 	var obs = new CanMap({
 		sex: 'male'
@@ -335,14 +335,14 @@ test('hookups in tables', function () {
 	div.appendChild(legacyHelpers.view.frag(compiled));
 	// We have to test using nodeName and innerHTML (and not outerHTML) because IE 8 and under treats
 	// user-defined properties on nodes as attributes.
-	equal(div.getElementsByTagName('tbody')[0].firstChild.firstChild.nodeName, 'TD', 'initial tag');
-	equal(div.getElementsByTagName('tbody')[0].firstChild.firstChild.innerHTML.replace(/(\r|\n)+/g, ''), 'Mr.', 'initial content');
+	assert.equal(div.getElementsByTagName('tbody')[0].firstChild.firstChild.nodeName, 'TD', 'initial tag');
+	assert.equal(div.getElementsByTagName('tbody')[0].firstChild.firstChild.innerHTML.replace(/(\r|\n)+/g, ''), 'Mr.', 'initial content');
 	obs.attr('sex', 'female');
-	equal(div.getElementsByTagName('tbody')[0].firstChild.firstChild.nodeName, 'TD', 'updated tag');
-	equal(div.getElementsByTagName('tbody')[0].firstChild.firstChild.innerHTML.replace(/(\r|\n)+/g, ''), 'Ms.', 'updated content');
+	assert.equal(div.getElementsByTagName('tbody')[0].firstChild.firstChild.nodeName, 'TD', 'updated tag');
+	assert.equal(div.getElementsByTagName('tbody')[0].firstChild.firstChild.innerHTML.replace(/(\r|\n)+/g, ''), 'Ms.', 'updated content');
 });
 //Issue 233
-test('multiple tbodies in table hookup', function () {
+QUnit.test('multiple tbodies in table hookup', function(assert) {
 	var text = '<table>' + '<% list(people, function(person){ %>' + '<tbody><tr><td><%= person.name %></td></tr></tbody>' + '<% }) %>' + '</table>',
 		people = new CanList([{
 			name: 'Steve'
@@ -357,10 +357,10 @@ test('multiple tbodies in table hookup', function () {
 			}),
 		div = document.createElement('div');
 	div.appendChild(legacyHelpers.view.frag(compiled));
-	equal(div.getElementsByTagName('tbody')
+	assert.equal(div.getElementsByTagName('tbody')
 		.length, 2, 'two tbodies');
 });
-test('multiple hookups in a single attribute', function () {
+QUnit.test('multiple hookups in a single attribute', function(assert) {
 	var text = '<div class=\'<%= obs.attr("foo") %>a<%= obs.attr("bar") %>b<%= obs.attr("baz") %>\'></div>',
 		obs = new CanMap({
 			foo: '1',
@@ -376,13 +376,13 @@ test('multiple hookups in a single attribute', function () {
 	var div = document.createElement('div');
 	div.appendChild(legacyHelpers.view.frag(compiled));
 	var innerDiv = div.childNodes[0];
-	equal(getAttr(innerDiv, 'class'), '1a2b3', 'initial render');
+	assert.equal(getAttr(innerDiv, 'class'), '1a2b3', 'initial render');
 	obs.attr('bar', '4');
-	equal(getAttr(innerDiv, 'class'), '1a4b3', 'initial render');
+	assert.equal(getAttr(innerDiv, 'class'), '1a4b3', 'initial render');
 	obs.attr('bar', '5');
-	equal(getAttr(innerDiv, 'class'), '1a5b3', 'initial render');
+	assert.equal(getAttr(innerDiv, 'class'), '1a5b3', 'initial render');
 });
-test('adding and removing multiple html content within a single element', function () {
+QUnit.test('adding and removing multiple html content within a single element', function(assert) {
 	var text = '<div><%== obs.attr("a") %><%== obs.attr("b") %><%== obs.attr("c") %></div>',
 		obs = new CanMap({
 			a: 'a',
@@ -397,22 +397,22 @@ test('adding and removing multiple html content within a single element', functi
 			});
 	var div = document.createElement('div');
 	div.appendChild(legacyHelpers.view.frag(compiled));
-	equal(div.firstChild.nodeName.toUpperCase(), 'DIV', 'initial render node name');
-	equal(div.firstChild.innerHTML, 'abc', 'initial render text');
+	assert.equal(div.firstChild.nodeName.toUpperCase(), 'DIV', 'initial render node name');
+	assert.equal(div.firstChild.innerHTML, 'abc', 'initial render text');
 	obs.attr({
 		a: '',
 		b: '',
 		c: ''
 	});
-	equal(div.firstChild.nodeName.toUpperCase(), 'DIV', 'updated render node name');
-	equal(div.firstChild.innerHTML, '', 'updated render text');
+	assert.equal(div.firstChild.nodeName.toUpperCase(), 'DIV', 'updated render node name');
+	assert.equal(div.firstChild.innerHTML, '', 'updated render text');
 	obs.attr({
 		c: 'c'
 	});
-	equal(div.firstChild.nodeName.toUpperCase(), 'DIV', 'updated render node name');
-	equal(div.firstChild.innerHTML, 'c', 'updated render text');
+	assert.equal(div.firstChild.nodeName.toUpperCase(), 'DIV', 'updated render node name');
+	assert.equal(div.firstChild.innerHTML, 'c', 'updated render text');
 });
-test('live binding and removeAttr', function () {
+QUnit.test('live binding and removeAttr', function(assert) {
 	var text = '<% if(obs.attr("show")) { %>' +
 			'<p <%== obs.attr("attributes") %> class="<%= obs.attr("className")%>"><span><%= obs.attr("message") %></span></p>' +
 		'<% } %>',
@@ -435,33 +435,33 @@ test('live binding and removeAttr', function () {
 	var p = div.getElementsByTagName('p')[0],
 		span = p.getElementsByTagName('span')[0];
 
-	equal(p.getAttribute('some'), 'myText', 'initial render attr');
-	equal(getAttr(p, 'class'), 'myMessage', 'initial render class');
-	equal(span.innerHTML, 'Live long and prosper', 'initial render innerHTML');
+	assert.equal(p.getAttribute('some'), 'myText', 'initial render attr');
+	assert.equal(getAttr(p, 'class'), 'myMessage', 'initial render class');
+	assert.equal(span.innerHTML, 'Live long and prosper', 'initial render innerHTML');
 	obs.removeAttr('className');
-	equal(getAttr(p, 'class'), '', 'class is undefined');
+	assert.equal(getAttr(p, 'class'), '', 'class is undefined');
 	obs.attr('className', 'newClass');
-	equal(getAttr(p, 'class'), 'newClass', 'class updated');
+	assert.equal(getAttr(p, 'class'), 'newClass', 'class updated');
 	obs.removeAttr('attributes');
-	equal(p.getAttribute('some'), null, 'attribute is undefined');
+	assert.equal(p.getAttribute('some'), null, 'attribute is undefined');
 	obs.attr('attributes', 'some="newText"');
-	equal(p.getAttribute('some'), 'newText', 'attribute updated');
+	assert.equal(p.getAttribute('some'), 'newText', 'attribute updated');
 	obs.removeAttr('message');
 
-	equal(span.innerHTML, '', 'text node value is empty');
+	assert.equal(span.innerHTML, '', 'text node value is empty');
 
 	obs.attr('message', 'Warp drive, Mr. Sulu');
-	equal(span.innerHTML, 'Warp drive, Mr. Sulu', 'text node updated');
+	assert.equal(span.innerHTML, 'Warp drive, Mr. Sulu', 'text node updated');
 	obs.removeAttr('show');
-	equal(div.innerHTML, '', 'value in block statement is undefined');
+	assert.equal(div.innerHTML, '', 'value in block statement is undefined');
 	obs.attr('show', true);
 	p = div.getElementsByTagName('p')[0];
 	span = p.getElementsByTagName('span')[0];
-	equal(p.getAttribute('some'), 'newText', 'value in block statement updated attr');
-	equal(getAttr(p, 'class'), 'newClass', 'value in block statement updated class');
-	equal(span.innerHTML, 'Warp drive, Mr. Sulu', 'value in block statement updated innerHTML');
+	assert.equal(p.getAttribute('some'), 'newText', 'value in block statement updated attr');
+	assert.equal(getAttr(p, 'class'), 'newClass', 'value in block statement updated class');
+	assert.equal(span.innerHTML, 'Warp drive, Mr. Sulu', 'value in block statement updated innerHTML');
 });
-test('hookup within a tag', function () {
+QUnit.test('hookup within a tag', function(assert) {
 	var text = '<div <%== obs.attr("foo") %> ' + '<%== obs.attr("baz") %>>lorem ipsum</div>',
 		obs = new CanMap({
 			foo: 'class="a"',
@@ -476,20 +476,20 @@ test('hookup within a tag', function () {
 	var div = document.createElement('div');
 	div.appendChild(legacyHelpers.view.frag(compiled));
 	var anchor = div.getElementsByTagName('div')[0];
-	equal(getAttr(anchor, 'class'), 'a');
-	equal(anchor.getAttribute('some'), 'property');
+	assert.equal(getAttr(anchor, 'class'), 'a');
+	assert.equal(anchor.getAttribute('some'), 'property');
 	obs.attr('foo', 'class="b"');
-	equal(getAttr(anchor, 'class'), 'b');
-	equal(anchor.getAttribute('some'), 'property');
+	assert.equal(getAttr(anchor, 'class'), 'b');
+	assert.equal(anchor.getAttribute('some'), 'property');
 	obs.attr('baz', 'some=\'new property\'');
-	equal(getAttr(anchor, 'class'), 'b');
-	equal(anchor.getAttribute('some'), 'new property');
+	assert.equal(getAttr(anchor, 'class'), 'b');
+	assert.equal(anchor.getAttribute('some'), 'new property');
 	obs.attr('foo', 'class=""');
 	obs.attr('baz', '');
-	equal(getAttr(anchor, 'class'), '', 'anchor class blank');
-	equal(anchor.getAttribute('some'), undefined, 'attribute "some" is undefined');
+	assert.equal(getAttr(anchor, 'class'), '', 'anchor class blank');
+	assert.equal(anchor.getAttribute('some'), undefined, 'attribute "some" is undefined');
 });
-test('single escaped tag, removeAttr', function () {
+QUnit.test('single escaped tag, removeAttr', function(assert) {
 	var text = '<div <%= obs.attr("foo") %>>lorem ipsum</div>',
 		obs = new CanMap({
 			foo: 'data-bar="john doe\'s bar"'
@@ -503,13 +503,13 @@ test('single escaped tag, removeAttr', function () {
 	var div = document.createElement('div');
 	div.appendChild(legacyHelpers.view.frag(compiled));
 	var anchor = div.getElementsByTagName('div')[0];
-	equal(anchor.getAttribute('data-bar'), 'john doe\'s bar');
+	assert.equal(anchor.getAttribute('data-bar'), 'john doe\'s bar');
 	obs.removeAttr('foo');
-	equal(anchor.getAttribute('data-bar'), null);
+	assert.equal(anchor.getAttribute('data-bar'), null);
 	obs.attr('foo', 'data-bar="baz"');
-	equal(anchor.getAttribute('data-bar'), 'baz');
+	assert.equal(anchor.getAttribute('data-bar'), 'baz');
 });
-test('html comments', function () {
+QUnit.test('html comments', function(assert) {
 	var text = '<!-- bind to changes in the todo list --> <div><%= obs.attr("foo") %></div>',
 		obs = new CanMap({
 			foo: 'foo'
@@ -522,9 +522,9 @@ test('html comments', function () {
 			});
 	var div = document.createElement('div');
 	div.appendChild(legacyHelpers.view.frag(compiled));
-	equal(div.getElementsByTagName('div')[0].innerHTML, 'foo', 'Element as expected');
+	assert.equal(div.getElementsByTagName('div')[0].innerHTML, 'foo', 'Element as expected');
 });
-test('hookup and live binding', function () {
+QUnit.test('hookup and live binding', function(assert) {
 	var text = '<div class=\'<%= task.attr(\'completed\') ? \'complete\' : \'\' %>\' <%= (el)-> domData.set.call(el,\'task\',task) %>>' +
 		'<%== task.attr(\'name\') %>' + '</div>',
 		task = new CanMap({
@@ -542,15 +542,15 @@ test('hookup and live binding', function () {
 		div = document.createElement('div');
 	div.appendChild(legacyHelpers.view.frag(compiled));
 	var child = div.getElementsByTagName('div')[0];
-	ok(child.className.indexOf('complete') === -1, 'is incomplete');
-	ok( !! domData.get.call(child, 'task'), 'has data');
-	equal(child.innerHTML, 'My Name', 'has name');
+	assert.ok(child.className.indexOf('complete') === -1, 'is incomplete');
+	assert.ok( !! domData.get.call(child, 'task'), 'has data');
+	assert.equal(child.innerHTML, 'My Name', 'has name');
 	task.attr({
 		completed: true,
 		name: 'New Name'
 	});
-	ok(child.className.indexOf('complete') !== -1, 'is complete');
-	equal(child.innerHTML, 'New Name', 'has new name');
+	assert.ok(child.className.indexOf('complete') !== -1, 'is complete');
+	assert.equal(child.innerHTML, 'New Name', 'has new name');
 });
 /*
  test('multiple curly braces in a block', function() {
@@ -575,7 +575,7 @@ test('hookup and live binding', function () {
  equal(u.innerHTML, '<li>foo</li>', 'updated observable');
  });
  */
-test('unescape bindings change', function () {
+QUnit.test('unescape bindings change', function(assert) {
 	var l = new CanList([{
 		complete: true
 	}, {
@@ -603,20 +603,20 @@ test('unescape bindings change', function () {
 	var div = document.createElement('div');
 	div.appendChild(legacyHelpers.view.frag(compiled));
 	var child = div.getElementsByTagName('div')[0];
-	equal(child.innerHTML, '2', 'at first there are 2 true bindings');
+	assert.equal(child.innerHTML, '2', 'at first there are 2 true bindings');
 	var item = new CanMap({
 		complete: true,
 		id: 'THIS ONE'
 	});
 	l.push(item);
-	equal(child.innerHTML, '3', 'now there are 3 complete');
+	assert.equal(child.innerHTML, '3', 'now there are 3 complete');
 	item.attr('complete', false);
-	equal(child.innerHTML, '2', 'now there are 2 complete');
+	assert.equal(child.innerHTML, '2', 'now there are 2 complete');
 	l.pop();
 	item.attr('complete', true);
-	equal(child.innerHTML, '2', 'there are still 2 complete');
+	assert.equal(child.innerHTML, '2', 'there are still 2 complete');
 });
-test('escape bindings change', function () {
+QUnit.test('escape bindings change', function(assert) {
 	var l = new CanList([{
 		complete: true
 	}, {
@@ -644,16 +644,16 @@ test('escape bindings change', function () {
 	var div = document.createElement('div');
 	div.appendChild(legacyHelpers.view.frag(compiled));
 	var child = div.getElementsByTagName('div')[0];
-	equal(child.innerHTML, '2', 'at first there are 2 true bindings');
+	assert.equal(child.innerHTML, '2', 'at first there are 2 true bindings');
 	var item = new CanMap({
 		complete: true
 	});
 	l.push(item);
-	equal(child.innerHTML, '3', 'now there are 3 complete');
+	assert.equal(child.innerHTML, '3', 'now there are 3 complete');
 	item.attr('complete', false);
-	equal(child.innerHTML, '2', 'now there are 2 complete');
+	assert.equal(child.innerHTML, '2', 'now there are 2 complete');
 });
-test('tag bindings change', function () {
+QUnit.test('tag bindings change', function(assert) {
 	var l = new CanList([{
 		complete: true
 	}, {
@@ -681,16 +681,16 @@ test('tag bindings change', function () {
 	var div = document.createElement('div');
 	div.appendChild(legacyHelpers.view.frag(compiled));
 	var child = div.getElementsByTagName('div')[0];
-	equal(child.getAttribute('items'), '2', 'at first there are 2 true bindings');
+	assert.equal(child.getAttribute('items'), '2', 'at first there are 2 true bindings');
 	var item = new CanMap({
 		complete: true
 	});
 	l.push(item);
-	equal(child.getAttribute('items'), '3', 'now there are 3 complete');
+	assert.equal(child.getAttribute('items'), '3', 'now there are 3 complete');
 	item.attr('complete', false);
-	equal(child.getAttribute('items'), '2', 'now there are 2 complete');
+	assert.equal(child.getAttribute('items'), '2', 'now there are 2 complete');
 });
-test('attribute value bindings change', function () {
+QUnit.test('attribute value bindings change', function(assert) {
 	var l = new CanList([{
 		complete: true
 	}, {
@@ -718,16 +718,16 @@ test('attribute value bindings change', function () {
 	var div = document.createElement('div');
 	div.appendChild(legacyHelpers.view.frag(compiled));
 	var child = div.getElementsByTagName('div')[0];
-	equal(child.getAttribute('items'), '2', 'at first there are 2 true bindings');
+	assert.equal(child.getAttribute('items'), '2', 'at first there are 2 true bindings');
 	var item = new CanMap({
 		complete: true
 	});
 	l.push(item);
-	equal(child.getAttribute('items'), '3', 'now there are 3 complete');
+	assert.equal(child.getAttribute('items'), '3', 'now there are 3 complete');
 	item.attr('complete', false);
-	equal(child.getAttribute('items'), '2', 'now there are 2 complete');
+	assert.equal(child.getAttribute('items'), '2', 'now there are 2 complete');
 });
-test('in tag toggling', function () {
+QUnit.test('in tag toggling', function(assert) {
 	var text = '<div <%== obs.attr(\'val\') %>></div>';
 	var obs = new CanMap({
 		val: 'foo="bar"'
@@ -744,10 +744,10 @@ test('in tag toggling', function () {
 	obs.attr('val', 'foo="bar"');
 	var d2 = div.getElementsByTagName('div')[0];
 	// toUpperCase added to normalize cases for IE8
-	equal(d2.getAttribute('foo'), 'bar', 'bar set');
-	equal(d2.getAttribute('bar'), null, 'bar set');
+	assert.equal(d2.getAttribute('foo'), 'bar', 'bar set');
+	assert.equal(d2.getAttribute('bar'), null, 'bar set');
 });
-test('parent is right with bock', function () {
+QUnit.test('parent is right with bock', function(assert) {
 	var text = '<ul><% if(!obs.attr("items").length) { %>' + '<li>No items</li>' + '<% } else { %> <%== obs.attr("content") %>' + '<% } %></ul>',
 		obs = new CanMap({
 			content: '<li>Hello</li>',
@@ -765,10 +765,10 @@ test('parent is right with bock', function () {
 	div.appendChild(legacyHelpers.view.frag(compiled));
 	var ul = div.getElementsByTagName('ul')[0];
 	var li = div.getElementsByTagName('li')[0];
-	ok(ul, 'we have a ul');
-	ok(li, 'we have a li');
+	assert.ok(ul, 'we have a ul');
+	assert.ok(li, 'we have a li');
 });
-test('nested properties', function () {
+QUnit.test('nested properties', function(assert) {
 	var text = '<div><%= obs.attr(\'name.first\')%></div>';
 	var obs = new CanMap({
 		name: {
@@ -784,11 +784,11 @@ test('nested properties', function () {
 	var div = document.createElement('div');
 	div.appendChild(legacyHelpers.view.frag(compiled));
 	div = div.getElementsByTagName('div')[0];
-	equal(div.innerHTML, 'Justin');
+	assert.equal(div.innerHTML, 'Justin');
 	obs.attr('name.first', 'Brian');
-	equal(div.innerHTML, 'Brian');
+	assert.equal(div.innerHTML, 'Brian');
 });
-test('tags without chidren or ending with /> do not change the state', function () {
+QUnit.test('tags without chidren or ending with /> do not change the state', function(assert) {
 	var text = '<table><tr><td></td><%== obs.attr(\'content\') %></tr></div>';
 	var obs = new CanMap({
 		content: '<td>Justin</td>'
@@ -802,9 +802,9 @@ test('tags without chidren or ending with /> do not change the state', function 
 	var div = document.createElement('div');
 	var html = legacyHelpers.view.frag(compiled);
 	div.appendChild(html);
-	equal(div.getElementsByTagName('span')
+	assert.equal(div.getElementsByTagName('span')
 		.length, 0, 'there are no spans');
-	equal(div.getElementsByTagName('td')
+	assert.equal(div.getElementsByTagName('td')
 		.length, 2, 'there are 2 td');
 });
 
@@ -816,15 +816,15 @@ test('tags without chidren or ending with /> do not change the state', function 
 /*test("memory safe without parentElement of blocks", function(){
 
  })*/
-test('trailing text', function () {
+QUnit.test('trailing text', function(assert) {
 	var template = EJS('There are <%= this.attr(\'length\') %> todos');
 	var div = document.createElement('div');
 	div.appendChild(template( new CanList([{}, {}])));
-	ok(/There are 2 todos/.test(div.innerHTML), 'got all text');
+	assert.ok(/There are 2 todos/.test(div.innerHTML), 'got all text');
 });
 
 
-test('live binding select', function () {
+QUnit.test('live binding select', function(assert) {
 	var text = '<select><% items.each(function(ob) { %>' + '<option value=\'<%= ob.attr(\'id\') %>\'><%= ob.attr(\'title\') %></option>' + '<% }); %></select>',
 		items = new CanList([{
 			title: 'Make bugs',
@@ -847,19 +847,19 @@ test('live binding select', function () {
 			}),
 		div = document.createElement('div');
 	div.appendChild(legacyHelpers.view.frag(compiled));
-	equal(div.getElementsByTagName('option')
+	assert.equal(div.getElementsByTagName('option')
 		.length, 3, '3 items in list');
 	var option = div.getElementsByTagName('option')[0];
-	equal(option.value, '' + items[0].id, 'value attr set');
-	equal(option.textContent || option.text, items[0].title, 'content of option');
+	assert.equal(option.value, '' + items[0].id, 'value attr set');
+	assert.equal(option.textContent || option.text, items[0].title, 'content of option');
 	items.push({
 		id: 3,
 		name: 'Go to pub'
 	});
-	equal(div.getElementsByTagName('option')
+	assert.equal(div.getElementsByTagName('option')
 		.length, 4, '4 items in list');
 });
-test('live binding textarea', function () {
+QUnit.test('live binding textarea', function(assert) {
 	var template = EJS('<textarea>Before<%= obs.attr(\'middle\') %>After</textarea>');
 
 	var obs = new CanMap({
@@ -871,11 +871,11 @@ test('live binding textarea', function () {
 	});
 	div.appendChild(node);
 	var textarea = div.firstChild;
-	equal(textarea.value, 'BeforeyesAfter');
+	assert.equal(textarea.value, 'BeforeyesAfter');
 	obs.attr('middle', 'Middle');
-	equal(textarea.value, 'BeforeMiddleAfter');
+	assert.equal(textarea.value, 'BeforeMiddleAfter');
 });
-test('reset on a live bound input', function () {
+QUnit.test('reset on a live bound input', function(assert) {
 	var text = '<input type=\'text\' value=\'<%= person.attr(\'name\') %>\'><button type=\'reset\'>Reset</button>',
 		person = new CanMap({
 			name: 'Bob'
@@ -891,10 +891,10 @@ test('reset on a live bound input', function () {
 	form.appendChild(legacyHelpers.view.frag(compiled));
 	input = form.getElementsByTagName('input')[0];
 	form.reset();
-	equal(input.value, 'Bob', 'value is correct');
+	assert.equal(input.value, 'Bob', 'value is correct');
 });
 
-test('attribute unquoting', function () {
+QUnit.test('attribute unquoting', function(assert) {
 	var text = '<input type="radio" ' + '<%== facet.single ? \'name="facet-\' + facet.attr("id") + \'"\' : "" %> ' + 'value="<%= facet.single ? "facet-" + facet.attr("id") : "" %>" />',
 		facet = new CanMap({
 			id: 1,
@@ -908,10 +908,10 @@ test('attribute unquoting', function () {
 			}),
 		div = document.createElement('div');
 	div.appendChild(legacyHelpers.view.frag(compiled));
-	equal(div.children[0].name, 'facet-1');
-	equal(div.children[0].value, 'facet-1');
+	assert.equal(div.children[0].name, 'facet-1');
+	assert.equal(div.children[0].value, 'facet-1');
 });
-test('empty element hooks work correctly', function () {
+QUnit.test('empty element hooks work correctly', function(assert) {
 	var text = '<div <%= function(e){ e.innerHTML = "1 Will show"; } %>></div>' + '<div <%= function(e){ e.innerHTML = "2 Will not show"; } %>></div>' + '3 Will not show';
 	var compiled = new EJS({
 		text: text
@@ -919,9 +919,9 @@ test('empty element hooks work correctly', function () {
 		.render(),
 		div = document.createElement('div');
 	div.appendChild(legacyHelpers.view.frag(compiled));
-	equal(div.childNodes.length, 3, 'all three elements present');
+	assert.equal(div.childNodes.length, 3, 'all three elements present');
 });
-test('live binding with parent dependent tags but without parent tag present in template', function () {
+QUnit.test('live binding with parent dependent tags but without parent tag present in template', function(assert) {
 	var text = [
 		'<tbody>',
 		'<% if( person.attr("first") ){ %>',
@@ -944,21 +944,21 @@ test('live binding with parent dependent tags but without parent tag present in 
 		});
 	var table = document.createElement('table');
 	table.appendChild(legacyHelpers.view.frag(compiled));
-	equal(table.getElementsByTagName('tr')[0].firstChild.nodeName.toUpperCase(), 'TD');
-	equal(table.getElementsByTagName('tr')[0].firstChild.innerHTML, 'Austin');
-	equal(table.getElementsByTagName('tr')[1].firstChild.nodeName.toUpperCase(), 'TD');
-	equal(table.getElementsByTagName('tr')[1].firstChild.innerHTML, 'McDaniel');
+	assert.equal(table.getElementsByTagName('tr')[0].firstChild.nodeName.toUpperCase(), 'TD');
+	assert.equal(table.getElementsByTagName('tr')[0].firstChild.innerHTML, 'Austin');
+	assert.equal(table.getElementsByTagName('tr')[1].firstChild.nodeName.toUpperCase(), 'TD');
+	assert.equal(table.getElementsByTagName('tr')[1].firstChild.innerHTML, 'McDaniel');
 	person.removeAttr('first');
-	equal(table.getElementsByTagName('tr')[0].firstChild.nodeName.toUpperCase(), 'TD');
-	equal(table.getElementsByTagName('tr')[0].firstChild.innerHTML, 'McDaniel');
+	assert.equal(table.getElementsByTagName('tr')[0].firstChild.nodeName.toUpperCase(), 'TD');
+	assert.equal(table.getElementsByTagName('tr')[0].firstChild.innerHTML, 'McDaniel');
 	person.removeAttr('last');
-	equal(table.getElementsByTagName('tr')
+	assert.equal(table.getElementsByTagName('tr')
 		.length, 0);
 	person.attr('first', 'Justin');
-	equal(table.getElementsByTagName('tr')[0].firstChild.nodeName.toUpperCase(), 'TD');
-	equal(table.getElementsByTagName('tr')[0].firstChild.innerHTML, 'Justin');
+	assert.equal(table.getElementsByTagName('tr')[0].firstChild.nodeName.toUpperCase(), 'TD');
+	assert.equal(table.getElementsByTagName('tr')[0].firstChild.innerHTML, 'Justin');
 });
-test('spaces between attribute name and value', function () {
+QUnit.test('spaces between attribute name and value', function(assert) {
 	var text = '<input type="text" value = "<%= test %>" />',
 		compiled = new EJS({
 			text: text
@@ -969,10 +969,10 @@ test('spaces between attribute name and value', function () {
 		div = document.createElement('div');
 	div.appendChild(legacyHelpers.view.frag(compiled));
 	var input = div.getElementsByTagName('input')[0];
-	equal(input.value, 'testing');
-	equal(input.type, 'text');
+	assert.equal(input.value, 'testing');
+	assert.equal(input.type, 'text');
 });
-test('live binding with computes', function () {
+QUnit.test('live binding with computes', function(assert) {
 	var text = '<span><%= compute() %></span>',
 		compute = canCompute(5),
 		compiled = new EJS({
@@ -984,17 +984,17 @@ test('live binding with computes', function () {
 		div = document.createElement('div');
 	div.appendChild(legacyHelpers.view.frag(compiled));
 	var span = div.getElementsByTagName('span');
-	equal(span.length, 1);
+	assert.equal(span.length, 1);
 	span = span[0];
-	equal(span.innerHTML, '5');
+	assert.equal(span.innerHTML, '5');
 	compute(6);
-	equal(span.innerHTML, '6');
+	assert.equal(span.innerHTML, '6');
 	compute('Justin');
-	equal(span.innerHTML, 'Justin');
+	assert.equal(span.innerHTML, 'Justin');
 	compute(true);
-	equal(span.innerHTML, 'true');
+	assert.equal(span.innerHTML, 'true');
 });
-test('testing for clean tables', function () {
+QUnit.test('testing for clean tables', function(assert) {
 
 	var templateStr = '<table cellpadding="0" cellspacing="0" border="0" class="display">'+
 	    '<thead>'+
@@ -1042,11 +1042,11 @@ test('testing for clean tables', function () {
 	}),
 		div = document.createElement('div');
 	div.appendChild(legacyHelpers.view.frag(res));
-	ok(!/@@!!@@/.test(div.innerHTML), 'no placeholders');
+	assert.ok(!/@@!!@@/.test(div.innerHTML), 'no placeholders');
 });
 
 // http://forum.javascriptmvc.com/topic/live-binding-on-mustache-template-does-not-seem-to-be-working-with-nested-properties
-test('Observe with array attributes', function () {
+QUnit.test('Observe with array attributes', function(assert) {
 	var template = EJS('<ul><% list(todos, function(todo, i) { %><li><%= todos.attr(""+i) %></li><% }) %></ul><div><%= this.attr("message") %></div>');
 
 
@@ -1062,14 +1062,14 @@ test('Observe with array attributes', function () {
 	});
 	div.appendChild(template( data));
 
-	equal(div.getElementsByTagName('li')[1].innerHTML, 'Line #2', 'Check initial array');
-	equal(div.getElementsByTagName('div')[0].innerHTML, 'Hello', 'Check initial message');
+	assert.equal(div.getElementsByTagName('li')[1].innerHTML, 'Line #2', 'Check initial array');
+	assert.equal(div.getElementsByTagName('div')[0].innerHTML, 'Hello', 'Check initial message');
 	data.attr('todos.1', 'Line #2 changed');
 	data.attr('message', 'Hello again');
-	equal(div.getElementsByTagName('li')[1].innerHTML, 'Line #2 changed', 'Check updated array');
-	equal(div.getElementsByTagName('div')[0].innerHTML, 'Hello again', 'Check updated message');
+	assert.equal(div.getElementsByTagName('li')[1].innerHTML, 'Line #2 changed', 'Check updated array');
+	assert.equal(div.getElementsByTagName('div')[0].innerHTML, 'Hello again', 'Check updated message');
 });
-test('hookup this correctly', function () {
+QUnit.test('hookup this correctly', function(assert) {
 	var obj = {
 		from: 'cows'
 	};
@@ -1081,10 +1081,10 @@ test('hookup this correctly', function () {
 	var div = document.createElement('div');
 	div.appendChild(legacyHelpers.view.frag(compiled));
 	var span = div.getElementsByTagName('span')[0];
-	equal(domData.get.call(span, 'foo'), obj.from, 'object matches');
+	assert.equal(domData.get.call(span, 'foo'), obj.from, 'object matches');
 });
 //Issue 271
-test('live binding with html comment', function () {
+QUnit.test('live binding with html comment', function(assert) {
 	var text = '<table><tr><th>Todo</th></tr><!-- do not bother with me -->' + '<% todos.each(function(todo){ %><tr><td><%= todo.name %></td></tr><% }) %></table>',
 		Todos = new CanList([{
 			id: 1,
@@ -1098,19 +1098,19 @@ test('live binding with html comment', function () {
 			}),
 		div = document.createElement('div');
 	div.appendChild(legacyHelpers.view.frag(compiled));
-	equal(div.getElementsByTagName('table')[0].getElementsByTagName('td')
+	assert.equal(div.getElementsByTagName('table')[0].getElementsByTagName('td')
 		.length, 1, '1 item in list');
 	Todos.push({
 		id: 2,
 		name: 'Laundry'
 	});
-	equal(div.getElementsByTagName('table')[0].getElementsByTagName('td')
+	assert.equal(div.getElementsByTagName('table')[0].getElementsByTagName('td')
 		.length, 2, '2 items in list');
 	Todos.splice(0, 2);
-	equal(div.getElementsByTagName('table')[0].getElementsByTagName('td')
+	assert.equal(div.getElementsByTagName('table')[0].getElementsByTagName('td')
 		.length, 0, '0 items in list');
 });
-test('HTML comment with element callback', function () {
+QUnit.test('HTML comment with element callback', function(assert) {
 	var text = [
 		'<ul>',
 		'<% todos.each(function(todo) { %>',
@@ -1146,20 +1146,20 @@ test('HTML comment with element callback', function () {
 	};
 	div.appendChild(legacyHelpers.view.frag(compiled));
 	li = div.getElementsByTagName('ul')[0].getElementsByTagName('li');
-	equal(li.length, 1, '1 item in list');
-	equal(comments(li[0]), 2, '2 comments in item #1');
+	assert.equal(li.length, 1, '1 item in list');
+	assert.equal(comments(li[0]), 2, '2 comments in item #1');
 	Todos.push({
 		id: 2,
 		name: 'Laundry'
 	});
-	equal(li.length, 2, '2 items in list');
-	equal(comments(li[0]), 2, '2 comments in item #1');
-	equal(comments(li[1]), 2, '2 comments in item #2');
+	assert.equal(li.length, 2, '2 items in list');
+	assert.equal(comments(li[0]), 2, '2 comments in item #1');
+	assert.equal(comments(li[1]), 2, '2 comments in item #2');
 	Todos.splice(0, 2);
-	equal(li.length, 0, '0 items in list');
+	assert.equal(li.length, 0, '0 items in list');
 });
 
-test('correctness of data-view-id and only in tag opening', function () {
+QUnit.test('correctness of data-view-id and only in tag opening', function(assert) {
 	var text = [
 		'<textarea><select><% list(this.items, function(item) { %>',
 		'<option<%= (el) -> el.data(\'item\', item) %>><%= item.title %></option>',
@@ -1179,11 +1179,11 @@ test('correctness of data-view-id and only in tag opening', function () {
 				items: items
 			}),
 		expected = '^<textarea data-view-id=\'[0-9]+\'><select><option data-view-id=\'[0-9]+\'>One</option>' + '<option data-view-id=\'[0-9]+\'>Two</option></select></textarea>$';
-	ok(compiled.search(expected) === 0, 'Rendered output is as expected');
+	assert.ok(compiled.search(expected) === 0, 'Rendered output is as expected');
 	// clear hookups b/c we are using .render;
 	legacyHelpers.view.hookups = {};
 });
-test('return blocks within element tags', function () {
+QUnit.test('return blocks within element tags', function(assert) {
 	var animals = new CanList([
 		'sloth',
 		'bear'
@@ -1194,14 +1194,14 @@ test('return blocks within element tags', function () {
 	var frag = renderer({
 		lister: function () {
 			return function (el) {
-				equal(el.nodeName.toLowerCase(), 'li', 'got the LI it created');
+				assert.equal(el.nodeName.toLowerCase(), 'li', 'got the LI it created');
 			};
 		},
 		animals: animals
 	});
 	div.appendChild(frag);
 });
-test('Each does not redraw items', function () {
+QUnit.test('Each does not redraw items', function(assert) {
 	var animals = new CanList([
 		'sloth',
 		'bear'
@@ -1214,13 +1214,13 @@ test('Each does not redraw items', function () {
 	});
 	div.appendChild(frag);
 	div.getElementsByTagName('label')[0].myexpando = 'EXPANDO-ED';
-	equal(div.getElementsByTagName('label')
+	assert.equal(div.getElementsByTagName('label')
 		.length, 2, 'There are 2 labels');
 	animals.push('turtle');
-	equal(div.getElementsByTagName('label')[0].myexpando, 'EXPANDO-ED', 'same expando');
-	equal(div.getElementsByTagName('span')[2].innerHTML, 'turtle', 'turtle added');
+	assert.equal(div.getElementsByTagName('label')[0].myexpando, 'EXPANDO-ED', 'same expando');
+	assert.equal(div.getElementsByTagName('span')[2].innerHTML, 'turtle', 'turtle added');
 });
-test('Each works with no elements', function () {
+QUnit.test('Each works with no elements', function(assert) {
 	var animals = new CanList([
 		'sloth',
 		'bear'
@@ -1233,9 +1233,9 @@ test('Each works with no elements', function () {
 	});
 	div.appendChild(frag);
 	animals.push('turtle');
-	equal(div.innerHTML, 'sloth bear turtle ', 'turtle added');
+	assert.equal(div.innerHTML, 'sloth bear turtle ', 'turtle added');
 });
-test('Each does not redraw items (normal array)', function () {
+QUnit.test('Each does not redraw items (normal array)', function(assert) {
 	var animals = [
 		'sloth',
 		'bear',
@@ -1250,13 +1250,13 @@ test('Each does not redraw items (normal array)', function () {
 	div.appendChild(frag);
 	div.getElementsByTagName('label')[0].myexpando = 'EXPANDO-ED';
 	//animals.push("dog")
-	equal(div.getElementsByTagName('label')
+	assert.equal(div.getElementsByTagName('label')
 		.length, 3, 'There are 2 labels');
-	equal(div.getElementsByTagName('label')[0].myexpando, 'EXPANDO-ED', 'same expando');
-	equal(div.getElementsByTagName('label')[0].myexpando, 'EXPANDO-ED', 'same expando');
-	equal(div.getElementsByTagName('span')[2].innerHTML, 'turtle', 'turtle added');
+	assert.equal(div.getElementsByTagName('label')[0].myexpando, 'EXPANDO-ED', 'same expando');
+	assert.equal(div.getElementsByTagName('label')[0].myexpando, 'EXPANDO-ED', 'same expando');
+	assert.equal(div.getElementsByTagName('span')[2].innerHTML, 'turtle', 'turtle added');
 });
-test('list works within another branch', function () {
+QUnit.test('list works within another branch', function(assert) {
 	var animals = new CanList([]),
 		template = '<div>Animals:' + '<% if( animals.attr(\'length\') ){ %>~' + '<% animals.each(function(animal){%>' + '<span><%=animal %></span>' + '<%})%>' + '<% } else { %>' + 'No animals' + '<% } %>' + '!</div>';
 	var renderer = EJS(template);
@@ -1266,14 +1266,14 @@ test('list works within another branch', function () {
 		animals: animals
 	});
 	div.appendChild(frag);
-	equal(div.getElementsByTagName('div')[0].innerHTML, 'Animals:No animals!');
+	assert.equal(div.getElementsByTagName('div')[0].innerHTML, 'Animals:No animals!');
 	animals.push('sloth');
-	equal(div.getElementsByTagName('span')
+	assert.equal(div.getElementsByTagName('span')
 		.length, 1, 'There is 1 sloth');
 	animals.pop();
-	equal(div.getElementsByTagName('div')[0].innerHTML, 'Animals:No animals!');
+	assert.equal(div.getElementsByTagName('div')[0].innerHTML, 'Animals:No animals!');
 });
-test('each works within another branch', function () {
+QUnit.test('each works within another branch', function(assert) {
 	var animals = new CanList([]),
 		template = '<div>Animals:' + '<% if( animals.attr(\'length\') ){ %>~' + '<%==each(animals, function(animal){%>' + '<span><%=animal %></span>' + '<%})%>' + '<% } else { %>' + 'No animals' + '<% } %>' + '!</div>';
 	var renderer = EJS(template);
@@ -1282,12 +1282,12 @@ test('each works within another branch', function () {
 		animals: animals
 	});
 	div.appendChild(frag);
-	equal(div.getElementsByTagName('div')[0].innerHTML, 'Animals:No animals!');
+	assert.equal(div.getElementsByTagName('div')[0].innerHTML, 'Animals:No animals!');
 	animals.push('sloth');
-	equal(div.getElementsByTagName('span')
+	assert.equal(div.getElementsByTagName('span')
 		.length, 1, 'There is 1 sloth');
 	animals.pop();
-	equal(div.getElementsByTagName('div')[0].innerHTML, 'Animals:No animals!');
+	assert.equal(div.getElementsByTagName('div')[0].innerHTML, 'Animals:No animals!');
 });
 
 // Issue #242
@@ -1321,7 +1321,7 @@ test('each works within another branch', function () {
  });
  */
 //Issue 267
-test('Access .length with nested dot notation', function () {
+QUnit.test('Access .length with nested dot notation', function(assert) {
 	var template = '<span id="nested"><%= this.attr("list.length") %></span>' + '<span id="unnested"><%= this.list.attr("length") %></span>',
 		obj = new CanMap({
 			list: [
@@ -1334,10 +1334,10 @@ test('Access .length with nested dot notation', function () {
 		renderer = EJS(template),
 		div = document.createElement('div');
 	div.appendChild(renderer(obj));
-	ok(div.getElementsByTagName('span')[0].innerHTML === '4', 'Nested dot notation.');
-	ok(div.getElementsByTagName('span')[1].innerHTML === '4', 'Not-nested dot notation.');
+	assert.ok(div.getElementsByTagName('span')[0].innerHTML === '4', 'Nested dot notation.');
+	assert.ok(div.getElementsByTagName('span')[1].innerHTML === '4', 'Not-nested dot notation.');
 });
-test('attributes in truthy section', function () {
+QUnit.test('attributes in truthy section', function(assert) {
 	var template = EJS('<p <% if(attribute) {%>data-test="<%=attribute%>"<% } %>></p>');
 	var data1 = {
 		attribute: 'test-value'
@@ -1345,16 +1345,16 @@ test('attributes in truthy section', function () {
 	var frag1 = template(data1);
 	var div1 = document.createElement('div');
 	div1.appendChild(frag1);
-	equal(div1.children[0].getAttribute('data-test'), 'test-value', 'hyphenated attribute value');
+	assert.equal(div1.children[0].getAttribute('data-test'), 'test-value', 'hyphenated attribute value');
 	var data2 = {
 		attribute: 'test value'
 	};
 	var frag2 = template(data2);
 	var div2 = document.createElement('div');
 	div2.appendChild(frag2);
-	equal(div2.children[0].getAttribute('data-test'), 'test value', 'whitespace in attribute value');
+	assert.equal(div2.children[0].getAttribute('data-test'), 'test value', 'whitespace in attribute value');
 });
-test('outputting array of attributes', function () {
+QUnit.test('outputting array of attributes', function(assert) {
 	var template = EJS('<p <% for(var i = 0; i < attribute.length; i++) { %><%=attribute[i].name%>="<%=attribute[i].value%>"<%}%>></p>');
 	var data = {
 		attribute: [{
@@ -1371,11 +1371,11 @@ test('outputting array of attributes', function () {
 	var frag = template(data);
 	var div = document.createElement('div');
 	div.appendChild(frag);
-	equal(div.children[0].getAttribute('data-test1'), 'value1', 'first value');
-	equal(div.children[0].getAttribute('data-test2'), 'value2', 'second value');
-	equal(div.children[0].getAttribute('data-test3'), 'value3', 'third value');
+	assert.equal(div.children[0].getAttribute('data-test1'), 'value1', 'first value');
+	assert.equal(div.children[0].getAttribute('data-test2'), 'value2', 'second value');
+	assert.equal(div.children[0].getAttribute('data-test3'), 'value3', 'third value');
 });
-test('_bindings removed when element removed', function () {
+QUnit.test('_bindings removed when element removed', function(assert) {
 	var template = EJS('<div id="game"><% if(game.attr("league")) { %><%= game.attr("name") %><% } %></div>'),
 		game = new CanMap({
 			'name': 'Fantasy Baseball',
@@ -1388,17 +1388,17 @@ test('_bindings removed when element removed', function () {
 
 	div.appendChild(frag);
 	domMutate.removeChild.call(div, div.firstChild);
-	stop();
+	var done = assert.async();
 	setTimeout(function () {
-		start();
-		equal(game.__bindEvents._lifecycleBindings, 0, 'No bindings left');
+		done();
+		assert.equal(game.__bindEvents._lifecycleBindings, 0, 'No bindings left');
 	}, 100);
 });
 // Note:  unsure if this is the same as calling from CanJS 2.3. What is known
 //  is that just passing new EJS({...}) into can.view.render doesn't work, but
 //  that's not the normal calling pattern anyway.  See the next test for how
 //  it's usually done.
-test("can.view.render() returns string (existing render func)", function() {
+QUnit.test("can.view.render() returns string (existing render func)", function(assert) {
 	var compiled = can.view.render(
 		new EJS({
 			text: this.angleBracketsNoThis
@@ -1406,10 +1406,10 @@ test("can.view.render() returns string (existing render func)", function() {
 		{ animals: this.animals },
 		{}
 	);
-	equal(compiled, '<ul><li>sloth</li><li>bear</li><li>monkey</li></ul>');
+	assert.equal(compiled, '<ul><li>sloth</li><li>bear</li><li>monkey</li></ul>');
 });
 if (__dirname !== '/') {
-	test("can.view.render() returns string (path)", function() {
+	QUnit.test("can.view.render() returns string (path)", function(assert) {
 		var compiled = can.view.render(
 			__dirname + "/binding.ejs",
 			{
@@ -1420,16 +1420,16 @@ if (__dirname !== '/') {
 				}
 			}
 		);
-		equal(typeof compiled, "string", "a string is returned (not hooked up)");
-		ok(/<div[^>]+data-view-id/.test(compiled), "String is awaiting hookup");
+		assert.equal(typeof compiled, "string", "a string is returned (not hooked up)");
+		assert.ok(/<div[^>]+data-view-id/.test(compiled), "String is awaiting hookup");
 		var div = document.createElement('div');
 		var frag = legacyHelpers.view.frag(compiled, div);
 		div.appendChild(frag);
-		equal(div.innerHTML, '<div class="complete">\n\tfoo\n</div>\n');
+		assert.equal(div.innerHTML, '<div class="complete">\n\tfoo\n</div>\n');
 	});
 }
 
-test("can.view() creates and hooks up fragment correctly (EJS render func)", function() {
+QUnit.test("can.view() creates and hooks up fragment correctly (EJS render func)", function(assert) {
 	var bindingEJS = EJS('<div class=\'<%= task.attr(\'completed\') ? "complete" : "" %>\'>\n' +
 												"\t<%== task.attr('name') %>\n" +
 												'</div>\n');
@@ -1445,10 +1445,10 @@ test("can.view() creates and hooks up fragment correctly (EJS render func)", fun
 	);
 	var div = document.createElement('div');
 	div.appendChild(compiled);
-	equal(div.innerHTML, '<div class="complete">\n\tfoo\n</div>\n');
+	assert.equal(div.innerHTML, '<div class="complete">\n\tfoo\n</div>\n');
 });
 
-test("can.view.render() can be called from within EJS (renderer)", function() {
+QUnit.test("can.view.render() can be called from within EJS (renderer)", function(assert) {
 	var compiled = new EJS({
 			text: '<div class="outer"><%== can.view.render( subEJS, this ) %></div>'
 		}).render({
@@ -1464,10 +1464,10 @@ test("can.view.render() can be called from within EJS (renderer)", function() {
 	);
 	var div = document.createElement('div');
 	div.appendChild(legacyHelpers.view.frag(compiled));
-	equal(div.innerHTML, '<div class="outer"><div class="complete">foo</div></div>');
+	assert.equal(div.innerHTML, '<div class="outer"><div class="complete">foo</div></div>');
 });
 if (__dirname !== '/') {
-	test("can.view.render() can be called from within EJS (path)", function() {
+	QUnit.test("can.view.render() can be called from within EJS (path)", function(assert) {
 		var compiled = new EJS({
 				text: '<div class="outer"><%== can.view.render( "' + __dirname + '/binding.ejs", this ) %></div>'
 			}).render({
@@ -1480,11 +1480,11 @@ if (__dirname !== '/') {
 		);
 		var div = document.createElement('div');
 		div.appendChild(legacyHelpers.view.frag(compiled));
-		equal(div.innerHTML, '<div class="outer"><div class="complete">\n\tfoo\n</div>\n</div>');
+		assert.equal(div.innerHTML, '<div class="outer"><div class="complete">\n\tfoo\n</div>\n</div>');
 	});
 }
 
-test("can.view.render() with a deferred", function() {
+QUnit.test("can.view.render() with a deferred", function(assert) {
 	var compiled = can.view.render(
 		new EJS({
 			text: this.angleBracketsNoThis
@@ -1492,7 +1492,7 @@ test("can.view.render() with a deferred", function() {
 		{ animals: new Deferred().resolve(this.animals) },
 		{}
 	);
-	ok(compiled instanceof Deferred, "result is a deferred");
-	equal(compiled.state(), "resolved", "deferral is sync (already resolved because the sources are resolved)");
-	equal(compiled._resultArgs[0], '<ul><li>sloth</li><li>bear</li><li>monkey</li></ul>');
+	assert.ok(compiled instanceof Deferred, "result is a deferred");
+	assert.equal(compiled.state(), "resolved", "deferral is sync (already resolved because the sources are resolved)");
+	assert.equal(compiled._resultArgs[0], '<ul><li>sloth</li><li>bear</li><li>monkey</li></ul>');
 });
