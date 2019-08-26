@@ -3,10 +3,10 @@
 // `can.EJS`: Embedded JavaScript Templates
 //
 var legacyHelpers = require('can-legacy-view-helpers');
-var extend = require("can-util/js/assign/assign");
-var namespace = require("can-namespace");
-var each = require("can-util/js/each/each");
 var canReflect = require("can-reflect");
+var extend = canReflect.assign;
+var namespace = require("can-namespace");
+var each = canReflect.each;
 var observationReader = require("can-stache-key");
 var DOCUMENT = require('can-globals/document/document');
 var view = legacyHelpers.view;

@@ -2,12 +2,13 @@ var QUnit = require("steal-qunit");
 var EJS = require("can-ejs");
 var CanMap = require("can-map");
 var legacyHelpers = require("can-legacy-view-helpers");
-var domData = require("can-util/dom/data/data");
+var domData = require("can-dom-data");
 var CanList = require("can-list");
 var can = require("can-namespace");
 var canCompute = require("can-compute");
-var domMutate = require("can-util/dom/mutate/mutate");
+var domMutate = require("can-dom-mutate/node");
 var Deferred = require("can-legacy-view-helpers/deferred");
+var canSymbol = require('can-symbol');
 
 QUnit.module('can-ejs, rendering', {
 	setup: function () {
@@ -17,16 +18,16 @@ QUnit.module('can-ejs, rendering', {
 			'bear',
 			'monkey'
 		];
-		if (!this.animals.each) {
-			this.animals.each = function (func) {
+		if (!this.animals.forEach) {
+			this.animals.forEach = function (func) {
 				for (var i = 0; i < this.length; i++) {
 					func(this[i]);
 				}
 			};
 		}
-		this.squareBrackets = '<ul><% this.animals.each(function(animal){%>' + '<li><%= animal %></li>' + '<%});%></ul>';
-		this.squareBracketsNoThis = '<ul><% animals.each(function(animal){%>' + '<li><%= animal %></li>' + '<%});%></ul>';
-		this.angleBracketsNoThis = '<ul><% animals.each(function(animal){%>' + '<li><%= animal %></li>' + '<%});%></ul>';
+		this.squareBrackets = '<ul><% this.animals.forEach(function(animal){%>' + '<li><%= animal %></li>' + '<%});%></ul>';
+		this.squareBracketsNoThis = '<ul><% animals.forEach(function(animal){%>' + '<li><%= animal %></li>' + '<%});%></ul>';
+		this.angleBracketsNoThis = '<ul><% animals.forEach(function(animal){%>' + '<li><%= animal %></li>' + '<%});%></ul>';
 	}
 });
 var getAttr = function (el, attrName) {
@@ -62,7 +63,7 @@ test('default carrot', function () {
 	equal(compiled, '<ul><li>sloth</li><li>bear</li><li>monkey</li></ul>');
 });
 test('render with double angle', function () {
-	var text = '<%% replace_me %>' + '<ul><% animals.each(function(animal){%>' + '<li><%= animal %></li>' + '<%});%></ul>';
+	var text = '<%% replace_me %>' + '<ul><% animals.forEach(function(animal){%>' + '<li><%= animal %></li>' + '<%});%></ul>';
 	var compiled = new EJS({
 		text: text
 	})
@@ -72,7 +73,7 @@ test('render with double angle', function () {
 	equal(compiled, '<% replace_me %><ul><li>sloth</li><li>bear</li><li>monkey</li></ul>', 'works');
 });
 test('comments', function () {
-	var text = '<%# replace_me %>' + '<ul><% animals.each(function(animal){%>' + '<li><%= animal %></li>' + '<%});%></ul>';
+	var text = '<%# replace_me %>' + '<ul><% animals.forEach(function(animal){%>' + '<li><%= animal %></li>' + '<%});%></ul>';
 	var compiled = new EJS({
 		text: text
 	})
@@ -182,7 +183,7 @@ test('easy hookup', function () {
 	ok(div.getElementsByTagName('div')[0].className.indexOf('yes') !== -1, 'has yes');
 });
 test('multiple function hookups in a tag', function () {
-	var text = '<span <%= (el)-> domData.set.call(el,\'foo\',\'bar\') %>' + ' <%= (el)-> domData.set.call(el,\'baz\',\'qux\') %>>lorem ipsum</span>',
+	var text = '<span <%= (el)-> domData.set(el,\'foo\',\'bar\') %>' + ' <%= (el)-> domData.set(el,\'baz\',\'qux\') %>>lorem ipsum</span>',
 		compiled = new EJS({
 			text: text
 		})
@@ -190,8 +191,8 @@ test('multiple function hookups in a tag', function () {
 		div = document.createElement('div');
 	div.appendChild(legacyHelpers.view.frag(compiled));
 	var span = div.getElementsByTagName('span')[0];
-	equal(domData.get.call(span, 'foo'), 'bar', 'first hookup');
-	equal(domData.get.call(span, 'baz'), 'qux', 'second hookup');
+	equal(domData.get(span, 'foo'), 'bar', 'first hookup');
+	equal(domData.get(span, 'baz'), 'qux', 'second hookup');
 });
 test('helpers', function () {
 	EJS.Helpers.prototype.simpleHelper = function () {
@@ -274,7 +275,7 @@ test('attribute single unescaped, html single unescaped', function () {
 	equal(div.getElementsByTagName('div')[0].className, 'complete', 'class changed to complete');
 });
 test('select live binding', function () {
-	var text = '<select><% todos.each(function(todo){ %><option><%= todo.name %></option><% }) %></select>',
+	var text = '<select><% todos.forEach(function(todo){ %><option><%= todo.name %></option><% }) %></select>',
 		Todos = new CanList([{
 			id: 1,
 			name: 'Dishes'
@@ -525,7 +526,7 @@ test('html comments', function () {
 	equal(div.getElementsByTagName('div')[0].innerHTML, 'foo', 'Element as expected');
 });
 test('hookup and live binding', function () {
-	var text = '<div class=\'<%= task.attr(\'completed\') ? \'complete\' : \'\' %>\' <%= (el)-> domData.set.call(el,\'task\',task) %>>' +
+	var text = '<div class=\'<%= task.attr(\'completed\') ? \'complete\' : \'\' %>\' <%= (el)-> domData.set(el,\'task\',task) %>>' +
 		'<%== task.attr(\'name\') %>' + '</div>',
 		task = new CanMap({
 			completed: false,
@@ -543,7 +544,7 @@ test('hookup and live binding', function () {
 	div.appendChild(legacyHelpers.view.frag(compiled));
 	var child = div.getElementsByTagName('div')[0];
 	ok(child.className.indexOf('complete') === -1, 'is incomplete');
-	ok( !! domData.get.call(child, 'task'), 'has data');
+	ok( !! domData.get(child, 'task'), 'has data');
 	equal(child.innerHTML, 'My Name', 'has name');
 	task.attr({
 		completed: true,
@@ -586,7 +587,7 @@ test('unescape bindings change', function () {
 	var completed = function () {
 		l.attr('length');
 		var num = 0;
-		l.each(function (item) {
+		l.forEach(function (item) {
 			if (item.attr('complete')) {
 				num++;
 			}
@@ -627,7 +628,7 @@ test('escape bindings change', function () {
 	var completed = function () {
 		l.attr('length');
 		var num = 0;
-		l.each(function (item) {
+		l.forEach(function (item) {
 			if (item.attr('complete')) {
 				num++;
 			}
@@ -664,7 +665,7 @@ test('tag bindings change', function () {
 	var completed = function () {
 		l.attr('length');
 		var num = 0;
-		l.each(function (item) {
+		l.forEach(function (item) {
 			if (item.attr('complete')) {
 				num++;
 			}
@@ -701,7 +702,7 @@ test('attribute value bindings change', function () {
 	var completed = function () {
 		l.attr('length');
 		var num = 0;
-		l.each(function (item) {
+		l.forEach(function (item) {
 			if (item.attr('complete')) {
 				num++;
 			}
@@ -825,7 +826,7 @@ test('trailing text', function () {
 
 
 test('live binding select', function () {
-	var text = '<select><% items.each(function(ob) { %>' + '<option value=\'<%= ob.attr(\'id\') %>\'><%= ob.attr(\'title\') %></option>' + '<% }); %></select>',
+	var text = '<select><% items.forEach(function(ob) { %>' + '<option value=\'<%= ob.attr(\'id\') %>\'><%= ob.attr(\'title\') %></option>' + '<% }); %></select>',
 		items = new CanList([{
 			title: 'Make bugs',
 			is_done: true,
@@ -1004,13 +1005,13 @@ test('testing for clean tables', function () {
 	        '</tr>'+
 	    '</thead>'+
 	    '<tbody>'+
-	        '<% games.each( function(game) { %>'+
+	        '<% games.forEach( function(game) { %>'+
 	            '<tr class="game">'+
 	                "<td> <%= game.attr('name') %></td>"+
 	                "<td> <%= game.attr('rating') %></td>"+
 	            "</tr>"+
 	        "<% }) %>"+
-	        '<% games.each( function(game) { %>'+
+	        '<% games.forEach( function(game) { %>'+
 	            '<tr class="game">'+
 	                "<td> <%= game.attr('name') %></td>"+
 	                "<td> <%= game.attr('rating') %></td>"+
@@ -1073,7 +1074,7 @@ test('hookup this correctly', function () {
 	var obj = {
 		from: 'cows'
 	};
-	var html = '<span <%== (el) -> domData.set.call(el, \'foo\', this.from) %>>tea</span>';
+	var html = '<span <%== (el) -> domData.set(el, \'foo\', this.from) %>>tea</span>';
 	var compiled = new EJS({
 		text: html
 	})
@@ -1081,11 +1082,11 @@ test('hookup this correctly', function () {
 	var div = document.createElement('div');
 	div.appendChild(legacyHelpers.view.frag(compiled));
 	var span = div.getElementsByTagName('span')[0];
-	equal(domData.get.call(span, 'foo'), obj.from, 'object matches');
+	equal(domData.get(span, 'foo'), obj.from, 'object matches');
 });
 //Issue 271
 test('live binding with html comment', function () {
-	var text = '<table><tr><th>Todo</th></tr><!-- do not bother with me -->' + '<% todos.each(function(todo){ %><tr><td><%= todo.name %></td></tr><% }) %></table>',
+	var text = '<table><tr><th>Todo</th></tr><!-- do not bother with me -->' + '<% todos.forEach(function(todo){ %><tr><td><%= todo.name %></td></tr><% }) %></table>',
 		Todos = new CanList([{
 			id: 1,
 			name: 'Dishes'
@@ -1113,8 +1114,8 @@ test('live binding with html comment', function () {
 test('HTML comment with element callback', function () {
 	var text = [
 		'<ul>',
-		'<% todos.each(function(todo) { %>',
-		'<li<%= (el) -> domData.set.call(el,\'todo\',todo) %>>',
+		'<% todos.forEach(function(todo) { %>',
+		'<li<%= (el) -> domData.set(el,\'todo\',todo) %>>',
 		'<!-- html comment #1 -->',
 		'<%= todo.name %>',
 		'<!-- html comment #2 -->',
@@ -1258,7 +1259,7 @@ test('Each does not redraw items (normal array)', function () {
 });
 test('list works within another branch', function () {
 	var animals = new CanList([]),
-		template = '<div>Animals:' + '<% if( animals.attr(\'length\') ){ %>~' + '<% animals.each(function(animal){%>' + '<span><%=animal %></span>' + '<%})%>' + '<% } else { %>' + 'No animals' + '<% } %>' + '!</div>';
+		template = '<div>Animals:' + '<% if( animals.attr(\'length\') ){ %>~' + '<% animals.forEach(function(animal){%>' + '<span><%=animal %></span>' + '<%})%>' + '<% } else { %>' + 'No animals' + '<% } %>' + '!</div>';
 	var renderer = EJS(template);
 	var div = document.createElement('div');
 	// $("#qunit-fixture").html(div);
@@ -1297,7 +1298,7 @@ test('each works within another branch', function () {
  var template = EJS(
  "<%" +
  "var bestTeam = teams[0];" +
- "can.each(teams, function(team) { %>" +
+ "can.forEach(teams, function(team) { %>" +
  "<div><%== team.name %></div>" +
  "<% }) %>" +
  "<div class='best'><%== bestTeam.name %>!</div>"),
@@ -1375,7 +1376,7 @@ test('outputting array of attributes', function () {
 	equal(div.children[0].getAttribute('data-test2'), 'value2', 'second value');
 	equal(div.children[0].getAttribute('data-test3'), 'value3', 'third value');
 });
-test('_bindings removed when element removed', function () {
+test('bindings removed when element removed', function () {
 	var template = EJS('<div id="game"><% if(game.attr("league")) { %><%= game.attr("name") %><% } %></div>'),
 		game = new CanMap({
 			'name': 'Fantasy Baseball',
@@ -1387,11 +1388,12 @@ test('_bindings removed when element removed', function () {
 	var div = document.getElementById("qunit-fixture");
 
 	div.appendChild(frag);
+	equal(game[canSymbol.for("can.meta")].handlers.empty, false, 'handlers have been attached');
 	domMutate.removeChild.call(div, div.firstChild);
 	stop();
 	setTimeout(function () {
 		start();
-		equal(game.__bindEvents._lifecycleBindings, 0, 'No bindings left');
+		equal(game[canSymbol.for("can.meta")].handlers.empty, true, 'all handlers have been detached');
 	}, 100);
 });
 // Note:  unsure if this is the same as calling from CanJS 2.3. What is known
