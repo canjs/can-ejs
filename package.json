@@ -59,7 +59,7 @@
   },
   "devDependencies": {
     "can-list": "^3.1.0",
-    "can-map": "^3.1.0",
+    "can-map": "^4.3.11",
     "detect-cyclic-packages": "^1.1.0",
     "jshint": "^2.9.1",
     "steal": "^1.5.13",
